@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Package, MapPin, TrendingUp } from "lucide-react";
+import BarikoiMap from "@/components/BarikoiMap";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,19 @@ export default function Microhubs() {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [manageDialogOpen, setManageDialogOpen] = useState(false);
   const [selectedHub, setSelectedHub] = useState<Microhub | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    coords: { lng: number; lat: number } | null;
+    address: string;
+  }>({ coords: null, address: "" });
+
+  const BARIKOI_API_KEY = "bkoi_7320ae3afe9069973b45efc472aaab9284d0e5f27c1b894c22c71f6bc543a4c6";
+
+  const handleLocationSelect = useCallback(
+    (coords: { lng: number; lat: number }, location: string) => {
+      setSelectedLocation({ coords, address: location });
+    },
+    []
+  );
 
   const { data, isLoading } = useQuery<ApiListResponse<Microhub>>({
     queryKey: ["microhubs"],
@@ -78,9 +92,21 @@ export default function Microhubs() {
   const handleAddMicrohub = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+    
+    if (!selectedLocation.coords) {
+      toast({ 
+        title: "Location required", 
+        description: "Please select a location on the map.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     addMutation.mutate({
       name: formData.get("name") as string,
-      location: formData.get("location") as string,
+      location: selectedLocation.address,
+      latitude: selectedLocation.coords.lat,
+      longitude: selectedLocation.coords.lng,
       capacity: parseInt(formData.get("capacity") as string),
       utilized: 0,
     });
@@ -247,8 +273,13 @@ export default function Microhubs() {
       </Card>
 
       {/* Add Microhub Dialog */}
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      <Dialog open={addDialogOpen} onOpenChange={(open) => {
+        setAddDialogOpen(open);
+        if (!open) {
+          setSelectedLocation({ coords: null, address: "" });
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add New Microhub</DialogTitle>
             <DialogDescription>
@@ -267,13 +298,23 @@ export default function Microhubs() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  name="location"
-                  placeholder="e.g., Dhanmondi, Dhaka"
-                  required
+                <Label>Location (Click on map to pin)</Label>
+                <BarikoiMap
+                  apiKey={BARIKOI_API_KEY}
+                  onLocationSelect={handleLocationSelect}
+                  height="250px"
                 />
+                {selectedLocation.address && (
+                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md text-sm">
+                    <MapPin className="w-4 h-4 text-primary shrink-0" />
+                    <span className="truncate">{selectedLocation.address}</span>
+                  </div>
+                )}
+                {selectedLocation.coords && (
+                  <p className="text-xs text-muted-foreground">
+                    Coordinates: {selectedLocation.coords.lat.toFixed(6)}, {selectedLocation.coords.lng.toFixed(6)}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="capacity">Capacity (sq ft)</Label>
@@ -291,7 +332,9 @@ export default function Microhubs() {
               <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Add Microhub</Button>
+              <Button type="submit" disabled={!selectedLocation.coords}>
+                Add Microhub
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

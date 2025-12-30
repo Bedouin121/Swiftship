@@ -34,6 +34,8 @@ export interface Microhub {
   _id: string;
   name: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   capacity: number;
   utilized: number;
   status: string;
