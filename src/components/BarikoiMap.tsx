@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 // Barikoi GL types
 declare global {
@@ -54,10 +54,17 @@ export default function BarikoiMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<BkoiMap | null>(null);
   const markerRef = useRef<BkoiMarker | null>(null);
-  const scriptsLoadedRef = useRef(false);
+  const onLocationSelectRef = useRef(onLocationSelect);
 
-  const reverseGeocode = useCallback(
-    async (lng: number, lat: number): Promise<string> => {
+  // Keep callback ref updated without triggering re-renders
+  useEffect(() => {
+    onLocationSelectRef.current = onLocationSelect;
+  }, [onLocationSelect]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const reverseGeocode = async (lng: number, lat: number): Promise<string> => {
       try {
         const response = await fetch(
           `${BARIKOI_REVERSE_GEOCODE_URL}?longitude=${lng}&latitude=${lat}&district=true&sub_district=true&api_key=${apiKey}`
@@ -71,42 +78,42 @@ export default function BarikoiMap({
       } catch {
         return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
       }
-    },
-    [apiKey]
-  );
+    };
 
-  const handleMarkerPlacement = useCallback(
-    async (lngLat: { lng: number; lat: number }) => {
+    const handleMarkerPlacement = async (lngLat: { lng: number; lat: number }) => {
+      if (!mapRef.current || !mounted) return;
+
       // Remove existing marker
       if (markerRef.current) {
         markerRef.current.remove();
+        markerRef.current = null;
       }
 
       // Create new draggable marker
       const marker = new window.bkoigl.Marker({ draggable: true })
         .setLngLat([lngLat.lng, lngLat.lat])
-        .addTo(mapRef.current!);
+        .addTo(mapRef.current);
 
       markerRef.current = marker;
 
       // Get location from reverse geocode
       const location = await reverseGeocode(lngLat.lng, lngLat.lat);
-      onLocationSelect({ lng: lngLat.lng, lat: lngLat.lat }, location);
+      if (mounted) {
+        onLocationSelectRef.current({ lng: lngLat.lng, lat: lngLat.lat }, location);
+      }
 
       // Handle marker drag end
       marker.on("dragend", async () => {
+        if (!mounted) return;
         const newLngLat = marker.getLngLat();
         const newLocation = await reverseGeocode(newLngLat.lng, newLngLat.lat);
-        onLocationSelect({ lng: newLngLat.lng, lat: newLngLat.lat }, newLocation);
+        if (mounted) {
+          onLocationSelectRef.current({ lng: newLngLat.lng, lat: newLngLat.lat }, newLocation);
+        }
       });
-    },
-    [onLocationSelect, reverseGeocode]
-  );
+    };
 
-  useEffect(() => {
     const loadScripts = async () => {
-      if (scriptsLoadedRef.current) return;
-
       // Load CSS
       if (!document.querySelector('link[href*="bkoi-gl"]')) {
         const link = document.createElement("link");
@@ -125,14 +132,12 @@ export default function BarikoiMap({
           document.head.appendChild(script);
         });
       }
-
-      scriptsLoadedRef.current = true;
     };
 
     const initMap = async () => {
       await loadScripts();
 
-      if (!mapContainerRef.current || mapRef.current) return;
+      if (!mapContainerRef.current || !mounted) return;
 
       const map = new window.bkoigl.Map({
         container: mapContainerRef.current,
@@ -156,6 +161,7 @@ export default function BarikoiMap({
     initMap();
 
     return () => {
+      mounted = false;
       if (markerRef.current) {
         markerRef.current.remove();
         markerRef.current = null;
@@ -165,7 +171,7 @@ export default function BarikoiMap({
         mapRef.current = null;
       }
     };
-  }, [apiKey, initialCenter, initialZoom, handleMarkerPlacement]);
+  }, [apiKey, initialCenter, initialZoom]);
 
   return (
     <div className="relative rounded-lg overflow-hidden border">
