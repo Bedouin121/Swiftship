@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Package, TrendingUp, TrendingDown } from "lucide-react";
+import { MapPin, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import StockTrackingMap from "@/components/StockTrackingMap";
 import { apiRequest } from "@/lib/api-client";
 import type { ApiListResponse, Microhub } from "@/types/api";
 
@@ -13,6 +14,7 @@ export default function StockTracking() {
   });
 
   const stockItems = data?.data ?? [];
+  const BARIKOI_API_KEY = import.meta.env.VITE_BARIKOI_API_KEY;
 
   const summarizeStatus = (hub: Microhub) => {
     const utilization = Math.round((hub.utilized / hub.capacity) * 100);
@@ -86,18 +88,23 @@ export default function StockTracking() {
       <Card>
         <CardHeader>
           <CardTitle>Warehouse Location Map</CardTitle>
-          <CardDescription>Visual layout of stock locations</CardDescription>
+          <CardDescription>Visual layout of stock locations with utilization levels</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-muted-foreground">Interactive warehouse map would be rendered here</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {stockItems.length ? "Showing live microhub utilization" : "No microhub data available"}
-              </p>
+          {BARIKOI_API_KEY ? (
+            <StockTrackingMap 
+              microhubs={stockItems} 
+              apiKey={BARIKOI_API_KEY}
+              height="400px"
+            />
+          ) : (
+            <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <MapPin className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-muted-foreground">Map unavailable - API key not configured</p>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 

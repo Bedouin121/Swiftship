@@ -44,12 +44,23 @@ export default function Microhubs() {
     coords: { lng: number; lat: number } | null;
     address: string;
   }>({ coords: null, address: "" });
+  const [editLocation, setEditLocation] = useState<{
+    coords: { lng: number; lat: number } | null;
+    address: string;
+  }>({ coords: null, address: "" });
 
-  const BARIKOI_API_KEY = "bkoi_7320ae3afe9069973b45efc472aaab9284d0e5f27c1b894c22c71f6bc543a4c6";
+  const BARIKOI_API_KEY = import.meta.env.VITE_BARIKOI_API_KEY;
 
   const handleLocationSelect = useCallback(
     (coords: { lng: number; lat: number }, location: string) => {
       setSelectedLocation({ coords, address: location });
+    },
+    []
+  );
+
+  const handleEditLocationSelect = useCallback(
+    (coords: { lng: number; lat: number }, location: string) => {
+      setEditLocation({ coords, address: location });
     },
     []
   );
@@ -116,19 +127,32 @@ export default function Microhubs() {
     e.preventDefault();
     if (!selectedHub) return;
     const formData = new FormData(e.currentTarget);
+    
+    const updatePayload: any = {
+      name: formData.get("name") as string,
+      capacity: parseInt(formData.get("capacity") as string),
+      status: formData.get("status") as string,
+    };
+
+    // Update location and coordinates if new location was selected
+    if (editLocation.coords && editLocation.address) {
+      updatePayload.location = editLocation.address;
+      updatePayload.latitude = editLocation.coords.lat;
+      updatePayload.longitude = editLocation.coords.lng;
+    } else {
+      // Keep existing location if no new location selected
+      updatePayload.location = formData.get("location") as string;
+    }
+
     updateMutation.mutate({
       id: selectedHub._id,
-      payload: {
-        name: formData.get("name") as string,
-        location: formData.get("location") as string,
-        capacity: parseInt(formData.get("capacity") as string),
-        status: formData.get("status") as string,
-      },
+      payload: updatePayload,
     });
   };
 
   const openManageDialog = (hub: Microhub) => {
     setSelectedHub(hub);
+    setEditLocation({ coords: null, address: "" }); // Reset edit location
     setManageDialogOpen(true);
   };
 
@@ -235,7 +259,16 @@ export default function Microhubs() {
                   const utilization = Math.round((hub.utilized / hub.capacity) * 100);
                   return (
                     <TableRow key={hub._id}>
-                      <TableCell className="font-medium">{hub.name}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {hub.name}
+                          {hub.latitude && hub.longitude ? (
+                            <div className="w-2 h-2 bg-green-500 rounded-full" title="Has map coordinates" />
+                          ) : (
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full" title="Missing map coordinates" />
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{hub.location}</TableCell>
                       <TableCell>{hub.capacity.toLocaleString()}</TableCell>
                       <TableCell>{hub.utilized.toLocaleString()}</TableCell>
@@ -341,8 +374,13 @@ export default function Microhubs() {
       </Dialog>
 
       {/* Manage Microhub Dialog */}
-      <Dialog open={manageDialogOpen} onOpenChange={setManageDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+      <Dialog open={manageDialogOpen} onOpenChange={(open) => {
+        setManageDialogOpen(open);
+        if (!open) {
+          setEditLocation({ coords: null, address: "" });
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Manage Microhub</DialogTitle>
             <DialogDescription>
@@ -362,13 +400,47 @@ export default function Microhubs() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-location">Location</Label>
+                  <Label>Location</Label>
                   <Input
                     id="edit-location"
                     name="location"
                     defaultValue={selectedHub.location}
-                    required
+                    placeholder="Current location (will be updated if you select new location on map)"
+                    readOnly={!!editLocation.coords}
+                    value={editLocation.coords ? editLocation.address : undefined}
                   />
+                  <div className="text-sm text-muted-foreground mb-2">
+                    {selectedHub.latitude && selectedHub.longitude ? (
+                      <span className="text-green-600">
+                        ✓ Has coordinates ({selectedHub.latitude.toFixed(4)}, {selectedHub.longitude.toFixed(4)})
+                      </span>
+                    ) : (
+                      <span className="text-yellow-600">⚠ No coordinates saved</span>
+                    )}
+                  </div>
+                  <Label className="text-sm">Update Location (Optional - click on map to change)</Label>
+                  <BarikoiMap
+                    apiKey={BARIKOI_API_KEY}
+                    onLocationSelect={handleEditLocationSelect}
+                    height="200px"
+                    initialCenter={
+                      selectedHub.latitude && selectedHub.longitude
+                        ? [selectedHub.longitude, selectedHub.latitude]
+                        : undefined
+                    }
+                    initialZoom={selectedHub.latitude && selectedHub.longitude ? 15 : undefined}
+                  />
+                  {editLocation.address && (
+                    <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md text-sm">
+                      <MapPin className="w-4 h-4 text-green-600 shrink-0" />
+                      <span className="truncate text-green-800">New location: {editLocation.address}</span>
+                    </div>
+                  )}
+                  {editLocation.coords && (
+                    <p className="text-xs text-green-600">
+                      New coordinates: {editLocation.coords.lat.toFixed(6)}, {editLocation.coords.lng.toFixed(6)}
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-capacity">Capacity (sq ft)</Label>
