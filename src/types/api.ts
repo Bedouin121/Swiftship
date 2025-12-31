@@ -94,6 +94,14 @@ export interface Order {
   eta: string;
   placedAt?: string;
   createdAt: string;
+  microhubId?: string;
+  productId?: string;
+  quantity?: number;
+  deliveryType?: 'standard' | 'express';
+  deliveryLocation?: {
+    coordinates: [number, number];
+    address: string;
+  };
 }
 
 export interface Invoice {
