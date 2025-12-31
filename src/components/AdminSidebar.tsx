@@ -34,7 +34,7 @@ const microhubManagementItems = [
 ];
 
 interface AdminSidebarProps {
-  onRoleChange: (role: "admin" | "vendor") => void;
+  onRoleChange: (role: "admin" | "vendor" | "driver") => void;
 }
 
 export function AdminSidebar({ onRoleChange }: AdminSidebarProps) {

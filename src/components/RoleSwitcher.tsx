@@ -1,4 +1,4 @@
-import { Building2, Package } from "lucide-react";
+import { Building2, Package, Truck } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Role = "admin" | "vendor";
+type Role = "admin" | "vendor" | "driver";
 
 interface RoleSwitcherProps {
   currentRole: Role;
@@ -31,6 +31,12 @@ export function RoleSwitcher({ currentRole, onRoleChange }: RoleSwitcherProps) {
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4" />
             <span>Vendor Portal</span>
+          </div>
+        </SelectItem>
+        <SelectItem value="driver">
+          <div className="flex items-center gap-2">
+            <Truck className="w-4 h-4" />
+            <span>Driver Portal</span>
           </div>
         </SelectItem>
       </SelectContent>

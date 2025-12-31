@@ -22,7 +22,7 @@ const menuItems = [
 ];
 
 interface VendorSidebarProps {
-  onRoleChange: (role: "admin" | "vendor") => void;
+  onRoleChange: (role: "admin" | "vendor" | "driver") => void;
 }
 
 export function VendorSidebar({ onRoleChange }: VendorSidebarProps) {

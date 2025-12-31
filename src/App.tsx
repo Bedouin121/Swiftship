@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { VendorSidebar } from "@/components/VendorSidebar";
+import { DriverSidebar } from "@/components/DriverSidebar";
 import Dashboard from "./pages/Dashboard";
 import Microhubs from "./pages/Microhubs";
 import Vendors from "./pages/Vendors";
@@ -22,11 +23,16 @@ import AdminStockTracking from "./pages/admin/microhubs/StockTracking";
 import AdminInventoryLog from "./pages/admin/microhubs/InventoryLog";
 import AdminStorageOptimization from "./pages/admin/microhubs/StorageOptimization";
 import AdminResourceAllocation from "./pages/admin/microhubs/ResourceAllocation";
+import DriverDashboard from "./pages/driver/DriverDashboard";
+import DriverAssignments from "./pages/driver/Assignments";
+import ActiveDeliveries from "./pages/driver/ActiveDeliveries";
+import DeliveryConfirmation from "./pages/driver/DeliveryConfirmation";
+import CompletedDeliveries from "./pages/driver/CompletedDeliveries";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-type Role = "admin" | "vendor";
+type Role = "admin" | "vendor" | "driver";
 
 const App = () => {
   const [currentRole, setCurrentRole] = useState<Role>("admin");
@@ -35,6 +41,8 @@ const App = () => {
     switch (currentRole) {
       case "vendor":
         return <VendorSidebar onRoleChange={setCurrentRole} />;
+      case "driver":
+        return <DriverSidebar onRoleChange={setCurrentRole} />;
       default:
         return <AdminSidebar onRoleChange={setCurrentRole} />;
     }
@@ -71,6 +79,13 @@ const App = () => {
                   <Route path="/vendor/orders" element={<Orders />} />
                   <Route path="/vendor/analytics" element={<VendorAnalytics />} />
                   <Route path="/vendor/delivery-range" element={<DeliveryRange />} />
+
+                  {/* Driver Routes */}
+                  <Route path="/driver/dashboard" element={<DriverDashboard />} />
+                  <Route path="/driver/assignments" element={<DriverAssignments />} />
+                  <Route path="/driver/active" element={<ActiveDeliveries />} />
+                  <Route path="/driver/confirmation" element={<DeliveryConfirmation />} />
+                  <Route path="/driver/completed" element={<CompletedDeliveries />} />
 
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
