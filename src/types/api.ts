@@ -91,19 +91,28 @@ export interface Product {
 export interface Order {
   _id: string;
   customerName: string;
+  phoneNumber?: string;
   productsCount: number;
   total: number;
   status: string;
   eta: string;
   placedAt?: string;
   createdAt: string;
-  microhubId?: string;
+  sourceMicrohubId?: string | Microhub;
+  destinationMicrohubId?: string | Microhub;
+  microhubId?: string; // Keep for backwards compatibility
   productId?: string;
   quantity?: number;
   deliveryType?: 'standard' | 'express';
+  specifiedAddress?: string;
   deliveryLocation?: {
     coordinates: [number, number];
     address: string;
+    addressDetails?: {
+      address?: string;
+      thana?: string;
+      district?: string;
+    };
   };
 }
 

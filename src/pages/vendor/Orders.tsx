@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Package, Truck, CheckCircle, Clock, Plus } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -18,11 +18,14 @@ export default function Orders() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [addOrderDialogOpen, setAddOrderDialogOpen] = useState(false);
-  const [selectedMicrohub, setSelectedMicrohub] = useState<Microhub | null>(null);
+  const [selectedSourceMicrohub, setSelectedSourceMicrohub] = useState<Microhub | null>(null);
+  const [selectedDestinationMicrohub, setSelectedDestinationMicrohub] = useState<Microhub | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
     coords: { lng: number; lat: number } | null;
     address: string;
+    addressDetails?: { address?: string; thana?: string; district?: string };
   }>({ coords: null, address: "" });
+  const [phoneNumber, setPhoneNumber] = useState("+880");
 
   const BARIKOI_API_KEY = import.meta.env.VITE_BARIKOI_API_KEY;
 
@@ -55,44 +58,105 @@ export default function Orders() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendor", "orders"] });
       setAddOrderDialogOpen(false);
-      setSelectedMicrohub(null);
+      setSelectedSourceMicrohub(null);
+      setSelectedDestinationMicrohub(null);
       setSelectedLocation({ coords: null, address: "" });
+      setPhoneNumber("+880");
       toast({ title: "Order created successfully" });
     },
   });
 
-  const handleLocationSelect = (coords: { lng: number; lat: number }, location: string) => {
-    setSelectedLocation({ coords, address: location });
+  const deleteOrderMutation = useMutation({
+    mutationFn: (orderId: string) =>
+      apiRequest("/orders/" + orderId, {
+        method: "DELETE",
+        role: "vendor",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendor", "orders"] });
+      toast({ title: "Order deleted successfully" });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to delete order", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const handleDeleteOrder = (orderId: string) => {
+    if (window.confirm("Are you sure you want to delete this order?")) {
+      deleteOrderMutation.mutate(orderId);
+    }
+  };
+
+  const handleLocationSelect = (
+    coords: { lng: number; lat: number }, 
+    location: string,
+    addressDetails?: { address?: string; thana?: string; district?: string }
+  ) => {
+    setSelectedLocation({ coords, address: location, addressDetails });
   };
 
   const handleSubmitOrder = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    if (!selectedMicrohub || !selectedLocation.coords) {
-      toast({ title: "Please select a microhub and delivery location", variant: "destructive" });
+    if (!selectedSourceMicrohub || !selectedDestinationMicrohub || !selectedLocation.coords) {
+      toast({ title: "Please select source microhub, destination microhub, and delivery location", variant: "destructive" });
       return;
     }
 
-    const payload = {
-      microhubId: selectedMicrohub._id,
+    if (phoneNumber.length !== 14) {
+      toast({ title: "Please enter a valid phone number (10 digits after +880)", variant: "destructive" });
+      return;
+    }
+
+    const payload: any = {
+      sourceMicrohubId: selectedSourceMicrohub._id,
+      destinationMicrohubId: selectedDestinationMicrohub._id,
       productId: formData.get("productId") as string,
       quantity: parseInt(formData.get("quantity") as string),
       deliveryType: formData.get("deliveryType") as string,
       customerName: formData.get("customerName") as string,
+      phoneNumber: phoneNumber,
+      specifiedAddress: formData.get("specifiedAddress") as string,
       deliveryLocation: {
         coordinates: [selectedLocation.coords.lng, selectedLocation.coords.lat],
         address: selectedLocation.address,
       },
     };
 
+    // Add address details if available
+    if (selectedLocation.addressDetails) {
+      payload.deliveryLocation.addressDetails = selectedLocation.addressDetails;
+    }
+
     createOrderMutation.mutate(payload);
   };
 
-  const handleMicrohubSelect = (microhubId: string) => {
+  const handleSourceMicrohubSelect = (microhubId: string) => {
     const microhub = microhubs.find(m => m._id === microhubId);
-    setSelectedMicrohub(microhub || null);
+    setSelectedSourceMicrohub(microhub || null);
+  };
+
+  const handleDestinationMicrohubSelect = (microhubId: string) => {
+    const microhub = microhubs.find(m => m._id === microhubId);
+    setSelectedDestinationMicrohub(microhub || null);
     setSelectedLocation({ coords: null, address: "" });
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Ensure +880 prefix is always present and can't be deleted
+    if (value.startsWith("+880")) {
+      // Only allow digits after +880, max 10 digits
+      const digits = value.slice(4).replace(/\D/g, "").slice(0, 10);
+      setPhoneNumber("+880" + digits);
+    } else if (value === "") {
+      setPhoneNumber("+880");
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -207,9 +271,19 @@ export default function Orders() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline">
+                          View Details
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteOrder(order._id)}
+                          disabled={deleteOrderMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -229,16 +303,30 @@ export default function Orders() {
             <div className="space-y-6">
               {/* Customer Name */}
               <div>
-                <Label htmlFor="customerName">Customer Name</Label>
+                <Label htmlFor="customerName">Name</Label>
                 <Input id="customerName" name="customerName" required />
               </div>
 
-              {/* Microhub Selection */}
+              {/* Phone Number */}
               <div>
-                <Label htmlFor="microhub">Select Microhub</Label>
-                <Select onValueChange={handleMicrohubSelect} required>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input 
+                  id="phoneNumber" 
+                  name="phoneNumber"
+                  value={phoneNumber}
+                  onChange={handlePhoneNumberChange}
+                  required
+                  placeholder="+8801234567890"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Bangladeshi phone number (+880 followed by 10 digits)</p>
+              </div>
+
+              {/* Source Microhub Selection */}
+              <div>
+                <Label htmlFor="sourceMicrohub">Select Source Microhub</Label>
+                <Select onValueChange={handleSourceMicrohubSelect} required>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose a microhub" />
+                    <SelectValue placeholder="Choose a source microhub" />
                   </SelectTrigger>
                   <SelectContent>
                     {microhubs.map((microhub) => (
@@ -250,21 +338,38 @@ export default function Orders() {
                 </Select>
               </div>
 
-              {/* Map with 5km radius */}
-              {selectedMicrohub && selectedMicrohub.latitude && selectedMicrohub.longitude && (
+              {/* Destination Microhub Selection */}
+              <div>
+                <Label htmlFor="destinationMicrohub">Select Destination Microhub</Label>
+                <Select onValueChange={handleDestinationMicrohubSelect} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a destination microhub" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {microhubs.map((microhub) => (
+                      <SelectItem key={microhub._id} value={microhub._id}>
+                        {microhub.name} - {microhub.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Map with 5km radius - Only shown when destination microhub is selected */}
+              {selectedDestinationMicrohub && selectedDestinationMicrohub.latitude && selectedDestinationMicrohub.longitude && (
                 <div>
                   <Label>Delivery Location (within 5km radius)</Label>
                   <div className="mt-2">
                     <BarikoiMapWithRadius
                       onLocationSelect={handleLocationSelect}
                       apiKey={BARIKOI_API_KEY}
-                      centerCoords={[selectedMicrohub.longitude, selectedMicrohub.latitude]}
+                      centerCoords={[selectedDestinationMicrohub.longitude, selectedDestinationMicrohub.latitude]}
                       radiusKm={5}
                       initialZoom={13}
                       height="400px"
                     />
                     <div className="mt-2 p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium">Selected Microhub: {selectedMicrohub.name}</p>
+                      <p className="text-sm font-medium">Selected Destination Microhub: {selectedDestinationMicrohub.name}</p>
                       <p className="text-sm text-muted-foreground">
                         Click on the map within the 5km radius to select delivery location
                       </p>
@@ -277,6 +382,17 @@ export default function Orders() {
                   </div>
                 </div>
               )}
+
+              {/* Specified Address */}
+              <div>
+                <Label htmlFor="specifiedAddress">Specify Address</Label>
+                <Input 
+                  id="specifiedAddress" 
+                  name="specifiedAddress" 
+                  required
+                  placeholder="Enter specific address details"
+                />
+              </div>
 
               {/* Product Selection */}
               <div>

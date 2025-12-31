@@ -2,7 +2,11 @@ import { useEffect, useRef } from "react";
 import type { BkoiMap, BkoiMarker, MapClickEvent } from "@/types/barikoi";
 
 interface BarikoiMapWithRadiusProps {
-  onLocationSelect: (coords: { lng: number; lat: number }, location: string) => void;
+  onLocationSelect: (coords: { lng: number; lat: number }, location: string, addressDetails?: {
+    address?: string;
+    thana?: string;
+    district?: string;
+  }) => void;
   apiKey: string;
   centerCoords: [number, number];
   radiusKm?: number;
@@ -11,7 +15,7 @@ interface BarikoiMapWithRadiusProps {
 }
 
 const BARIKOI_STYLE_URL = "https://map.barikoi.com/styles/barikoi-light/style.json";
-const BARIKOI_REVERSE_GEOCODE_URL = "https://barikoi.xyz/v1/api/search/reverse/geocode";
+const BARIKOI_REVERSE_GEOCODE_URL = "https://barikoi.xyz/v2/api/search/reverse/geocode";
 
 // Helper function to calculate distance between two points in km
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -63,19 +67,42 @@ export default function BarikoiMapWithRadius({
   useEffect(() => {
     let mounted = true;
 
-    const reverseGeocode = async (lng: number, lat: number): Promise<string> => {
+    const reverseGeocode = async (lng: number, lat: number): Promise<{
+      location: string;
+      addressDetails: { address?: string; thana?: string; district?: string };
+    }> => {
       try {
         const response = await fetch(
-          `${BARIKOI_REVERSE_GEOCODE_URL}?longitude=${lng}&latitude=${lat}&district=true&sub_district=true&api_key=${apiKey}`
+          `${BARIKOI_REVERSE_GEOCODE_URL}?longitude=${lng}&latitude=${lat}&district=true&sub_district=true&thana=true&address=true&area=true&api_key=${apiKey}`
         );
         const data = await response.json();
         if (data.place) {
-          const { address, area, city, district } = data.place;
-          return [address, area, city, district].filter(Boolean).join(", ");
+          const { address, area, city, district, sub_district, thana } = data.place;
+          
+          // Build full location string from available components
+          const locationComponents = [address, area, city, district].filter(Boolean);
+          const fullLocation = locationComponents.join(", ");
+          
+          const addressDetails = {
+            address: address || fullLocation,
+            thana: thana || sub_district || area,
+            district: district || city
+          };
+          
+          return {
+            location: fullLocation,
+            addressDetails
+          };
         }
-        return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        return {
+          location: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+          addressDetails: {}
+        };
       } catch {
-        return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        return {
+          location: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+          addressDetails: {}
+        };
       }
     };
 
@@ -108,9 +135,9 @@ export default function BarikoiMapWithRadius({
       markerRef.current = marker;
 
       // Get location from reverse geocode
-      const location = await reverseGeocode(lngLat.lng, lngLat.lat);
+      const { location, addressDetails } = await reverseGeocode(lngLat.lng, lngLat.lat);
       if (mounted) {
-        onLocationSelectRef.current({ lng: lngLat.lng, lat: lngLat.lat }, location);
+        onLocationSelectRef.current({ lng: lngLat.lng, lat: lngLat.lat }, location, addressDetails);
       }
 
       // Handle marker drag end
@@ -131,9 +158,9 @@ export default function BarikoiMapWithRadius({
           return;
         }
 
-        const newLocation = await reverseGeocode(newLngLat.lng, newLngLat.lat);
+        const { location: newLocation, addressDetails: newAddressDetails } = await reverseGeocode(newLngLat.lng, newLngLat.lat);
         if (mounted) {
-          onLocationSelectRef.current({ lng: newLngLat.lng, lat: newLngLat.lat }, newLocation);
+          onLocationSelectRef.current({ lng: newLngLat.lng, lat: newLngLat.lat }, newLocation, newAddressDetails);
         }
       });
     };
