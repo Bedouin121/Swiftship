@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Package, MapPin, TrendingUp } from "lucide-react";
+import { Package, MapPin, TrendingUp, Trash2 } from "lucide-react";
 import BarikoiMap from "@/components/BarikoiMap";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,28 +39,34 @@ export default function Microhubs() {
   const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [manageDialogOpen, setManageDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedHub, setSelectedHub] = useState<Microhub | null>(null);
+  const [hubToDelete, setHubToDelete] = useState<Microhub | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{
     coords: { lng: number; lat: number } | null;
     address: string;
+    addressDetails?: { address?: string; thana?: string; district?: string };
   }>({ coords: null, address: "" });
   const [editLocation, setEditLocation] = useState<{
     coords: { lng: number; lat: number } | null;
     address: string;
+    addressDetails?: { address?: string; thana?: string; district?: string };
   }>({ coords: null, address: "" });
 
   const BARIKOI_API_KEY = import.meta.env.VITE_BARIKOI_API_KEY;
 
   const handleLocationSelect = useCallback(
-    (coords: { lng: number; lat: number }, location: string) => {
-      setSelectedLocation({ coords, address: location });
+    (coords: { lng: number; lat: number }, location: string, addressDetails?: { address?: string; thana?: string; district?: string }) => {
+      console.log('Location selected:', { coords, location, addressDetails });
+      setSelectedLocation({ coords, address: location, addressDetails });
     },
     []
   );
 
   const handleEditLocationSelect = useCallback(
-    (coords: { lng: number; lat: number }, location: string) => {
-      setEditLocation({ coords, address: location });
+    (coords: { lng: number; lat: number }, location: string, addressDetails?: { address?: string; thana?: string; district?: string }) => {
+      console.log('Edit location selected:', { coords, location, addressDetails });
+      setEditLocation({ coords, address: location, addressDetails });
     },
     []
   );
@@ -100,6 +106,27 @@ export default function Microhubs() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiRequest(`/microhubs/${id}`, {
+        method: "DELETE",
+        role: "admin",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["microhubs"] });
+      toast({ title: "Microhub deleted", description: "Microhub has been successfully deleted." });
+      setDeleteDialogOpen(false);
+      setHubToDelete(null);
+    },
+    onError: () => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to delete microhub. Please try again.",
+        variant: "destructive"
+      });
+    },
+  });
+
   const handleAddMicrohub = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -113,14 +140,20 @@ export default function Microhubs() {
       return;
     }
 
-    addMutation.mutate({
+    const payload = {
       name: formData.get("name") as string,
       location: selectedLocation.address,
+      address: selectedLocation.addressDetails?.address,
+      thana: selectedLocation.addressDetails?.thana,
+      district: selectedLocation.addressDetails?.district,
       latitude: selectedLocation.coords.lat,
       longitude: selectedLocation.coords.lng,
       capacity: parseInt(formData.get("capacity") as string),
       utilized: 0,
-    });
+    };
+
+    console.log('Submitting microhub payload:', payload);
+    addMutation.mutate(payload);
   };
 
   const handleUpdateMicrohub = (e: React.FormEvent<HTMLFormElement>) => {
@@ -137,6 +170,9 @@ export default function Microhubs() {
     // Update location and coordinates if new location was selected
     if (editLocation.coords && editLocation.address) {
       updatePayload.location = editLocation.address;
+      updatePayload.address = editLocation.addressDetails?.address;
+      updatePayload.thana = editLocation.addressDetails?.thana;
+      updatePayload.district = editLocation.addressDetails?.district;
       updatePayload.latitude = editLocation.coords.lat;
       updatePayload.longitude = editLocation.coords.lng;
     } else {
@@ -154,6 +190,17 @@ export default function Microhubs() {
     setSelectedHub(hub);
     setEditLocation({ coords: null, address: "" }); // Reset edit location
     setManageDialogOpen(true);
+  };
+
+  const openDeleteDialog = (hub: Microhub) => {
+    setHubToDelete(hub);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteMicrohub = () => {
+    if (hubToDelete) {
+      deleteMutation.mutate(hubToDelete._id);
+    }
   };
 
   return (
@@ -292,9 +339,19 @@ export default function Microhubs() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => openManageDialog(hub)}>
-                          Manage
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openManageDialog(hub)}>
+                            Manage
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => openDeleteDialog(hub)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -338,9 +395,24 @@ export default function Microhubs() {
                   height="250px"
                 />
                 {selectedLocation.address && (
-                  <div className="flex items-center gap-2 p-2 bg-muted rounded-md text-sm">
-                    <MapPin className="w-4 h-4 text-primary shrink-0" />
-                    <span className="truncate">{selectedLocation.address}</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md text-sm">
+                      <MapPin className="w-4 h-4 text-primary shrink-0" />
+                      <span className="truncate">{selectedLocation.address}</span>
+                    </div>
+                    {selectedLocation.addressDetails && (
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        {selectedLocation.addressDetails.address && (
+                          <div>Address: {selectedLocation.addressDetails.address}</div>
+                        )}
+                        {selectedLocation.addressDetails.thana && (
+                          <div>Thana: {selectedLocation.addressDetails.thana}</div>
+                        )}
+                        {selectedLocation.addressDetails.district && (
+                          <div>District: {selectedLocation.addressDetails.district}</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 {selectedLocation.coords && (
@@ -475,6 +547,50 @@ export default function Microhubs() {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Microhub Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Delete Microhub
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this microhub? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {hubToDelete && (
+            <div className="py-4">
+              <div className="bg-muted p-4 rounded-lg">
+                <h4 className="font-medium">{hubToDelete.name}</h4>
+                <p className="text-sm text-muted-foreground">{hubToDelete.location}</p>
+                <p className="text-sm text-muted-foreground">
+                  Capacity: {hubToDelete.capacity.toLocaleString()} sq ft
+                </p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              variant="destructive" 
+              onClick={handleDeleteMicrohub}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Microhub"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
