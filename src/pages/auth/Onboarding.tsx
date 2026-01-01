@@ -473,20 +473,27 @@ const Onboarding = () => {
                 </div>
             </div>
 
-            <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <div className="flex items-start gap-3">
-                    <Upload className="w-5 h-5 text-purple-600 mt-0.5" />
-                    <div>
-                        <h4 className="font-medium text-foreground mb-1">Document Upload</h4>
-                        <p className="text-sm text-muted-foreground mb-3">
-                            Upload your trade license and company registration documents
-                        </p>
-                        <Button variant="outline" className="border-purple-500/30 hover:bg-purple-500/10">
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload Documents
-                        </Button>
-                    </div>
+            <div className="space-y-2">
+                <Label htmlFor="vendorNidNumber" className="text-foreground font-medium">NID Number</Label>
+                <div className="relative">
+                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                        id="vendorNidNumber"
+                        placeholder="1234567890"
+                        value={formData.nidNumber}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                            updateForm("nidNumber", value);
+                        }}
+                        className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
+                        maxLength={10}
+                        pattern="[0-9]{10}"
+                        required
+                    />
                 </div>
+                {formData.nidNumber && formData.nidNumber.length !== 10 && (
+                    <p className="text-sm text-red-500">NID Number must be exactly 10 digits</p>
+                )}
             </div>
         </div>
     );
@@ -832,7 +839,7 @@ const Onboarding = () => {
         }
         if (userType === "customer" && step === 3) return agreeTerms;
         if (userType === "vendor") {
-            if (step === 3) return formData.companyName && formData.businessType && formData.registrationNumber;
+            if (step === 3) return formData.companyName && formData.businessType && formData.registrationNumber && formData.nidNumber && formData.nidNumber.length === 10;
             if (step === 4) return agreeTerms;
         }
         if (userType === "driver") {
