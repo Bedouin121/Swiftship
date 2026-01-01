@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { VendorSidebar } from "@/components/VendorSidebar";
@@ -14,6 +14,7 @@ import Vendors from "./pages/Vendors";
 import Drivers from "./pages/Drivers";
 import Fleet from "./pages/Fleet";
 import Billing from "./pages/Billing";
+import VendorDashboard from "./pages/vendor/VendorDashboard";
 import Products from "./pages/vendor/Products";
 import ShelfSpace from "./pages/vendor/ShelfSpace";
 import Orders from "./pages/vendor/Orders";
@@ -31,6 +32,7 @@ import CompletedDeliveries from "./pages/driver/CompletedDeliveries";
 import Login from "./pages/auth/Login";
 import Onboarding from "./pages/auth/Onboarding";
 import NotFound from "./pages/NotFound";
+import LogoutHandler from "./components/LogoutHandler";
 
 const queryClient = new QueryClient();
 
@@ -69,8 +71,18 @@ const AuthenticatedLayout = ({ children, currentRole, setCurrentRole }: {
 };
 
 const AppRoutes = () => {
-  const [currentRole, setCurrentRole] = useState<Role>("admin");
   const location = useLocation();
+  
+  // Get user role from localStorage
+  const userRole = localStorage.getItem("userRole") as Role | null;
+  const [currentRole, setCurrentRole] = useState<Role>(userRole || "admin");
+
+  // Update currentRole when userRole changes
+  useEffect(() => {
+    if (userRole) {
+      setCurrentRole(userRole);
+    }
+  }, [userRole]);
 
   // Check if current route is an auth route (no sidebar needed)
   const isAuthRoute = ['/login', '/onboarding'].includes(location.pathname);
@@ -84,10 +96,27 @@ const AppRoutes = () => {
     );
   }
 
+  // Check if current route is a vendor/driver route that requires specific authentication
+  const isVendorRoute = location.pathname.startsWith('/vendor');
+  const isDriverRoute = location.pathname.startsWith('/driver');
+  
+  // Only redirect to login if trying to access vendor routes without vendor auth, or driver routes without driver auth
+  // Admin (authenticated or not) can access everything
+  if (isVendorRoute && userRole && userRole !== "vendor" && userRole !== "admin") {
+    return <Navigate to="/login" replace />;
+  }
+  if (isDriverRoute && userRole && userRole !== "driver" && userRole !== "admin") {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // If no user role, default to admin (allows unrestricted access)
+  const effectiveRole = userRole || "admin";
+  const effectiveCurrentRole = userRole ? currentRole : "admin";
+
   return (
-    <AuthenticatedLayout currentRole={currentRole} setCurrentRole={setCurrentRole}>
+    <AuthenticatedLayout currentRole={effectiveCurrentRole} setCurrentRole={setCurrentRole}>
       <Routes>
-        {/* Admin Routes */}
+        {/* Admin Routes - Always accessible */}
         <Route path="/" element={<Dashboard />} />
         <Route path="/microhubs" element={<Microhubs />} />
         <Route path="/admin/microhubs/stock-tracking" element={<AdminStockTracking />} />
@@ -99,21 +128,33 @@ const AppRoutes = () => {
         <Route path="/fleet" element={<Fleet />} />
         <Route path="/billing" element={<Billing />} />
 
-        {/* Vendor Routes */}
-        <Route path="/vendor/products" element={<Products />} />
-        <Route path="/vendor/shelf-space" element={<ShelfSpace />} />
-        <Route path="/vendor/orders" element={<Orders />} />
-        <Route path="/vendor/analytics" element={<VendorAnalytics />} />
-        <Route path="/vendor/delivery-range" element={<DeliveryRange />} />
+        {/* Vendor Routes - Accessible by vendors and admins */}
+        {(effectiveRole === "vendor" || effectiveRole === "admin") && (
+          <>
+            <Route path="/vendor/products" element={<Products />} />
+            <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+            <Route path="/vendor/shelf-space" element={<ShelfSpace />} />
+            <Route path="/vendor/orders" element={<Orders />} />
+            <Route path="/vendor/analytics" element={<VendorAnalytics />} />
+            <Route path="/vendor/delivery-range" element={<DeliveryRange />} />
+          </>
+        )}
 
-        {/* Driver Routes */}
-        <Route path="/driver/dashboard" element={<DriverDashboard />} />
-        <Route path="/driver/assignments" element={<DriverAssignments />} />
-        <Route path="/driver/active" element={<ActiveDeliveries />} />
-        <Route path="/driver/confirmation" element={<DeliveryConfirmation />} />
-        <Route path="/driver/completed" element={<CompletedDeliveries />} />
+        {/* Driver Routes - Accessible by drivers and admins */}
+        {(effectiveRole === "driver" || effectiveRole === "admin") && (
+          <>
+            <Route path="/driver/dashboard" element={<DriverDashboard />} />
+            <Route path="/driver/assignments" element={<DriverAssignments />} />
+            <Route path="/driver/active" element={<ActiveDeliveries />} />
+            <Route path="/driver/confirmation" element={<DeliveryConfirmation />} />
+            <Route path="/driver/completed" element={<CompletedDeliveries />} />
+          </>
+        )}
 
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        {/* Logout route */}
+        <Route path="/logout" element={<LogoutHandler />} />
+
+        {/* Catch-all route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthenticatedLayout>

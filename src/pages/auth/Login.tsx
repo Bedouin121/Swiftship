@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -23,14 +24,64 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Get user type from URL params (e.g., /login?type=vendor)
+  const userType = searchParams.get("type") || "admin";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate login
-    setTimeout(() => {
+    
+    try {
+      // First try vendor login
+      const vendorResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          userType: "vendor",
+        }),
+      });
+
+      if (vendorResponse.ok) {
+        const vendorData = await vendorResponse.json();
+        
+        // Store vendor authentication data
+        localStorage.setItem("token", vendorData.data.token);
+        localStorage.setItem("user", JSON.stringify(vendorData.data.user));
+        localStorage.setItem("userRole", "vendor");
+        localStorage.setItem("vendorId", vendorData.data.user.id);
+
+        // Navigate to vendor products page
+        navigate("/vendor/products");
+        return;
+      }
+
+      // If vendor login fails, try admin login (simulate for now)
+      // In a real app, you'd have a separate admin login endpoint
+      if (email === "admin@swiftshift.com" && password === "admin123") {
+        localStorage.setItem("userRole", "admin");
+        localStorage.setItem("user", JSON.stringify({
+          id: "admin",
+          name: "Admin User",
+          email: "admin@swiftshift.com",
+          role: "admin"
+        }));
+        navigate("/");
+        return;
+      }
+
+      // If both fail, show error
+      throw new Error("Invalid credentials");
+      
+    } catch (error) {
+      console.error("Login error:", error);
+      alert(error instanceof Error ? error.message : "Login failed. Please try again.");
+    } finally {
       setIsLoading(false);
-      navigate("/");
-    }, 1500);
+    }
   };
 
   return (

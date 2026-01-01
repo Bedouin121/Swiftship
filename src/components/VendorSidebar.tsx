@@ -1,4 +1,4 @@
-import { Package, ShoppingCart, Calendar, BarChart3, MapPin } from "lucide-react";
+import { Package, ShoppingCart, Calendar, BarChart3, MapPin, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -10,8 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
-import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 const menuItems = [
   { title: "Products", url: "/vendor/products", icon: Package },
@@ -26,6 +26,8 @@ interface VendorSidebarProps {
 }
 
 export function VendorSidebar({ onRoleChange }: VendorSidebarProps) {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
   return (
     <Sidebar className="border-r-2 border-border/50 backdrop-blur-sm">
       <SidebarHeader className="border-b-2 border-border/50 p-4 bg-gradient-to-br from-secondary/5 to-accent/5">
@@ -40,7 +42,12 @@ export function VendorSidebar({ onRoleChange }: VendorSidebarProps) {
             <p className="text-xs text-muted-foreground font-medium">Vendor Portal</p>
           </div>
         </div>
-        <RoleSwitcher currentRole="vendor" onRoleChange={onRoleChange} />
+        
+        {/* User info */}
+        <div className="p-3 bg-muted/50 rounded-lg">
+          <p className="text-sm font-medium text-foreground">{user.name || "Vendor"}</p>
+          <p className="text-xs text-muted-foreground">{user.email}</p>
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -67,6 +74,22 @@ export function VendorSidebar({ onRoleChange }: VendorSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t-2 border-border/50 p-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink
+                to="/logout"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Logout</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

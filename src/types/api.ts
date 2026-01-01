@@ -48,12 +48,79 @@ export interface Microhub {
 
 export interface Vendor {
   _id: string;
+  firstName: string;
+  lastName: string;
   name: string;
   email: string;
+  phone: string;
+  address: string;
+  city: string;
+  companyName: string;
+  businessType: string;
+  registrationNumber: string;
+  taxId: string;
+  website?: string;
+  businessDescription: string;
+  nidNumber: string;
   status: string;
   products: number;
   registeredAt?: string;
   createdAt: string;
+}
+
+export interface PendingVendor {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  companyName: string;
+  businessType: string;
+  registrationNumber: string;
+  taxId: string;
+  website?: string;
+  businessDescription: string;
+  nidNumber: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VendorRegistrationData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  address: string;
+  city: string;
+  companyName: string;
+  businessType: string;
+  registrationNumber: string;
+  taxId: string;
+  website?: string;
+  businessDescription: string;
+  nidNumber: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+  userType: string;
+}
+
+export interface AuthResponse {
+  message: string;
+  data: {
+    token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+    };
+  };
 }
 
 export interface Driver {

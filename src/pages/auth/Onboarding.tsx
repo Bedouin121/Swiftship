@@ -104,6 +104,7 @@ const Onboarding = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [registrationComplete, setRegistrationComplete] = useState(false);
 
     useEffect(() => {
         const type = searchParams.get("type") as UserType | null;
@@ -132,12 +133,82 @@ const Onboarding = () => {
     };
 
     const handleSubmit = async () => {
+        console.log("🚀 handleSubmit called - starting registration");
         setIsLoading(true);
-        // Simulate registration
-        setTimeout(() => {
+        
+        try {
+            if (userType === "vendor") {
+                console.log("📝 Validating vendor fields...");
+                
+                // Validate vendor-specific fields
+                if (!formData.companyName || !formData.businessType || !formData.registrationNumber || 
+                    !formData.taxId || !formData.businessDescription || !formData.nidNumber) {
+                    throw new Error("Please fill in all required fields");
+                }
+
+                if (formData.nidNumber.length !== 10) {
+                    throw new Error("NID Number must be exactly 10 digits");
+                }
+
+                if (formData.password !== formData.confirmPassword) {
+                    throw new Error("Passwords do not match");
+                }
+
+                const apiUrl = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/auth/register/vendor`;
+                console.log("🌐 Making API call to:", apiUrl);
+
+                const requestBody = {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    password: formData.password,
+                    address: formData.address,
+                    city: formData.city,
+                    companyName: formData.companyName,
+                    businessType: formData.businessType,
+                    registrationNumber: formData.registrationNumber,
+                    taxId: formData.taxId,
+                    website: formData.website || undefined,
+                    businessDescription: formData.businessDescription,
+                    nidNumber: formData.nidNumber,
+                };
+
+                // Submit vendor registration
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                console.log("📡 Response received:", response.status, response.ok);
+
+                const data = await response.json();
+                console.log("📄 Response data:", data);
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Registration failed");
+                }
+
+                console.log("✅ Registration successful!");
+                // Success - mark registration as complete
+                setRegistrationComplete(true);
+            } else {
+                // For other user types, simulate registration for now
+                setTimeout(() => {
+                    setIsLoading(false);
+                    setRegistrationComplete(true);
+                }, 2000);
+                return;
+            }
+        } catch (error) {
+            console.error("❌ Registration error:", error);
+            alert(error instanceof Error ? error.message : "Registration failed. Please try again.");
+        } finally {
             setIsLoading(false);
-            setStep(getTotalSteps());
-        }, 2000);
+        }
     };
 
     const userTypeConfig = {
@@ -186,8 +257,7 @@ const Onboarding = () => {
                         <button
                             key={type}
                             onClick={() => {
-                                setUserType(type);
-                                setStep(2);
+                                navigate(`/onboarding?type=${type}`);
                             }}
                             className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${userType === type
                                     ? `${config.borderColor} ${config.bgColor}`
@@ -802,7 +872,8 @@ const Onboarding = () => {
     );
 
     const renderCurrentStep = () => {
-        if (step === getTotalSteps() && isLoading === false && step > 1) {
+        // Show success screen if registration is complete
+        if (registrationComplete) {
             return renderSuccess();
         }
 
@@ -835,11 +906,11 @@ const Onboarding = () => {
     const canProceed = () => {
         if (step === 1) return true;
         if (step === 2) {
-            return formData.firstName && formData.lastName && formData.email && formData.phone && formData.password && formData.confirmPassword;
+            return formData.firstName && formData.lastName && formData.email && formData.phone && formData.password && formData.confirmPassword && formData.address && formData.city;
         }
         if (userType === "customer" && step === 3) return agreeTerms;
         if (userType === "vendor") {
-            if (step === 3) return formData.companyName && formData.businessType && formData.registrationNumber && formData.nidNumber && formData.nidNumber.length === 10;
+            if (step === 3) return formData.companyName && formData.businessType && formData.registrationNumber && formData.taxId && formData.businessDescription && formData.nidNumber && formData.nidNumber.length === 10;
             if (step === 4) return agreeTerms;
         }
         if (userType === "driver") {
@@ -940,7 +1011,7 @@ const Onboarding = () => {
                     </div>
 
                     {/* Navigation buttons */}
-                    {step > 1 && step < getTotalSteps() && (
+                    {step > 1 && !registrationComplete && (
                         <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
                             <Button
                                 variant="ghost"
