@@ -73,7 +73,7 @@ export default function Microhubs() {
 
   const { data, isLoading } = useQuery<ApiListResponse<Microhub>>({
     queryKey: ["microhubs"],
-    queryFn: () => apiRequest<ApiListResponse<Microhub>>("/microhubs", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Microhub>>("/microhubs"),
   });
 
   const hubs = data?.data ?? [];
@@ -83,7 +83,6 @@ export default function Microhubs() {
       apiRequest<ApiItemResponse<Microhub>>("/microhubs", {
         method: "POST",
         body: payload,
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["microhubs"] });
@@ -97,7 +96,6 @@ export default function Microhubs() {
       apiRequest<ApiItemResponse<Microhub>>(`/microhubs/${id}`, {
         method: "PUT",
         body: payload,
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["microhubs"] });
@@ -110,7 +108,6 @@ export default function Microhubs() {
     mutationFn: (id: string) =>
       apiRequest(`/microhubs/${id}`, {
         method: "DELETE",
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["microhubs"] });

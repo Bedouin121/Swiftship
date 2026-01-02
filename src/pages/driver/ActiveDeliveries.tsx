@@ -16,7 +16,7 @@ export default function ActiveDeliveries() {
   
   const { data, isLoading } = useQuery<ApiListResponse<Order>>({
     queryKey: ["driver", "orders"],
-    queryFn: () => apiRequest<ApiListResponse<Order>>("/orders", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Order>>("/orders"),
   });
 
   const orders = data?.data ?? [];

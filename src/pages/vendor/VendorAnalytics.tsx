@@ -10,15 +10,15 @@ type FulfillmentDataPoint = { day: string; fulfilled: number; pending: number };
 export default function VendorAnalytics() {
   const salesQuery = useQuery<{ data: SalesDataPoint[] }>({
     queryKey: ["analytics", "sales"],
-    queryFn: () => apiRequest<{ data: SalesDataPoint[] }>("/analytics/vendor/sales", { role: "vendor" }),
+    queryFn: () => apiRequest<{ data: SalesDataPoint[] }>("/analytics/vendor/sales"),
   });
   const categoriesQuery = useQuery<{ data: CategoryDataPoint[] }>({
     queryKey: ["analytics", "categories"],
-    queryFn: () => apiRequest<{ data: CategoryDataPoint[] }>("/analytics/vendor/categories", { role: "vendor" }),
+    queryFn: () => apiRequest<{ data: CategoryDataPoint[] }>("/analytics/vendor/categories"),
   });
   const fulfillmentQuery = useQuery<{ data: FulfillmentDataPoint[] }>({
     queryKey: ["analytics", "fulfillment"],
-    queryFn: () => apiRequest<{ data: FulfillmentDataPoint[] }>("/analytics/vendor/fulfillment", { role: "vendor" }),
+    queryFn: () => apiRequest<{ data: FulfillmentDataPoint[] }>("/analytics/vendor/fulfillment"),
   });
 
   const salesData = salesQuery.data?.data ?? [];

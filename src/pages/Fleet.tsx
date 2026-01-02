@@ -7,7 +7,7 @@ import type { FleetMetrics } from "@/types/api";
 export default function Fleet() {
   const { data, isLoading } = useQuery<FleetMetrics>({
     queryKey: ["fleet", "metrics"],
-    queryFn: () => apiRequest<FleetMetrics>("/fleet/metrics", { role: "admin" }),
+    queryFn: () => apiRequest<FleetMetrics>("/fleet/metrics"),
   });
 
   const performanceMetrics = data?.topPerformers ?? [];

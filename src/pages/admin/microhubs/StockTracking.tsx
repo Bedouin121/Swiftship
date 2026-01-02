@@ -10,7 +10,7 @@ import type { ApiListResponse, Microhub } from "@/types/api";
 export default function StockTracking() {
   const { data, isLoading } = useQuery<ApiListResponse<Microhub>>({
     queryKey: ["microhubs"],
-    queryFn: () => apiRequest<ApiListResponse<Microhub>>("/microhubs", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Microhub>>("/microhubs"),
   });
 
   const stockItems = data?.data ?? [];

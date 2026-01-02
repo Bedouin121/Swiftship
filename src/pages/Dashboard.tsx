@@ -9,7 +9,7 @@ import type { DashboardResponse } from "@/types/api";
 export default function Dashboard() {
   const { data, isLoading } = useQuery<DashboardResponse>({
     queryKey: ["dashboard"],
-    queryFn: () => apiRequest<DashboardResponse>("/dashboard", { role: "admin" }),
+    queryFn: () => apiRequest<DashboardResponse>("/dashboard"),
   });
 
   const metrics = data?.metrics;

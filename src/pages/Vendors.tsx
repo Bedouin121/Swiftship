@@ -31,12 +31,12 @@ export default function Vendors() {
 
   const { data: vendorsData, isLoading: vendorsLoading } = useQuery<ApiListResponse<Vendor>>({
     queryKey: ["vendors"],
-    queryFn: () => apiRequest<ApiListResponse<Vendor>>("/vendors", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Vendor>>("/vendors"),
   });
 
   const { data: pendingVendorsData, isLoading: pendingLoading } = useQuery<ApiListResponse<PendingVendor>>({
     queryKey: ["pending-vendors"],
-    queryFn: () => apiRequest<ApiListResponse<PendingVendor>>("/vendors/pending", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<PendingVendor>>("/vendors/pending"),
   });
 
   const vendors = vendorsData?.data ?? [];
@@ -46,7 +46,6 @@ export default function Vendors() {
     mutationFn: (id: string) =>
       apiRequest(`/vendors/approve/${id}`, {
         method: "POST",
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendors"] });
@@ -58,7 +57,6 @@ export default function Vendors() {
     mutationFn: (id: string) =>
       apiRequest(`/vendors/reject/${id}`, {
         method: "POST",
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pending-vendors"] });
@@ -70,7 +68,6 @@ export default function Vendors() {
       apiRequest(`/vendors/${id}/status`, {
         method: "PATCH",
         body: { status },
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendors"] });

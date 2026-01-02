@@ -31,17 +31,17 @@ export default function Orders() {
 
   const { data, isLoading } = useQuery<ApiListResponse<Order>>({
     queryKey: ["vendor", "orders"],
-    queryFn: () => apiRequest<ApiListResponse<Order>>("/orders", { role: "vendor" }),
+    queryFn: () => apiRequest<ApiListResponse<Order>>("/orders"),
   });
 
   const { data: microhubsData } = useQuery<ApiListResponse<Microhub>>({
     queryKey: ["microhubs"],
-    queryFn: () => apiRequest<ApiListResponse<Microhub>>("/microhubs", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Microhub>>("/microhubs"),
   });
 
   const { data: productsData } = useQuery<ApiListResponse<Product>>({
     queryKey: ["vendor", "products"],
-    queryFn: () => apiRequest<ApiListResponse<Product>>("/products", { role: "vendor" }),
+    queryFn: () => apiRequest<ApiListResponse<Product>>("/products"),
   });
 
   const orders = data?.data ?? [];
@@ -53,7 +53,6 @@ export default function Orders() {
       apiRequest<ApiItemResponse<Order>>("/orders", {
         method: "POST",
         body: payload,
-        role: "vendor",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendor", "orders"] });
@@ -70,7 +69,6 @@ export default function Orders() {
     mutationFn: (orderId: string) =>
       apiRequest("/orders/" + orderId, {
         method: "DELETE",
-        role: "vendor",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendor", "orders"] });

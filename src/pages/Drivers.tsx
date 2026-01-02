@@ -31,12 +31,12 @@ export default function Drivers() {
 
   const { data: driversData, isLoading: driversLoading } = useQuery<ApiListResponse<Driver>>({
     queryKey: ["drivers"],
-    queryFn: () => apiRequest<ApiListResponse<Driver>>("/drivers", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Driver>>("/drivers"),
   });
 
   const { data: pendingDriversData, isLoading: pendingLoading } = useQuery<ApiListResponse<Driver>>({
     queryKey: ["pending-drivers"],
-    queryFn: () => apiRequest<ApiListResponse<Driver>>("/drivers/pending", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Driver>>("/drivers/pending"),
   });
 
   const drivers = driversData?.data ?? [];
@@ -46,7 +46,6 @@ export default function Drivers() {
     mutationFn: (id: string) =>
       apiRequest(`/drivers/approve/${id}`, {
         method: "POST",
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
@@ -58,7 +57,6 @@ export default function Drivers() {
     mutationFn: (id: string) =>
       apiRequest(`/drivers/reject/${id}`, {
         method: "POST",
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pending-drivers"] });
@@ -70,7 +68,6 @@ export default function Drivers() {
       apiRequest(`/drivers/${id}/status`, {
         method: "PATCH",
         body: { status },
-        role: "admin",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["drivers"] });

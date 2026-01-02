@@ -18,7 +18,7 @@ export default function Billing() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery<ApiListResponse<Invoice>>({
     queryKey: ["invoices"],
-    queryFn: () => apiRequest<ApiListResponse<Invoice>>("/billing/invoices", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<Invoice>>("/billing/invoices"),
   });
 
   const invoices = data?.data ?? [];
@@ -28,7 +28,6 @@ export default function Billing() {
       apiRequest(`/billing/invoices/${id}`, {
         method: "PATCH",
         body: { status },
-        role: "admin",
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
   });

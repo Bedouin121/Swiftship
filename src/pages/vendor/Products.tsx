@@ -29,7 +29,7 @@ export default function Products() {
 
   const { data, isLoading } = useQuery<ApiListResponse<Product>>({
     queryKey: ["vendor", "products"],
-    queryFn: () => apiRequest<ApiListResponse<Product>>("/products", { role: "vendor" }),
+    queryFn: () => apiRequest<ApiListResponse<Product>>("/products"),
   });
 
   const products = data?.data ?? [];
@@ -40,13 +40,11 @@ export default function Products() {
         return apiRequest<ApiItemResponse<Product>>(`/products/${id}`, {
           method: "PATCH",
           body: payload,
-          role: "vendor",
         });
       }
       return apiRequest<ApiItemResponse<Product>>("/products", {
         method: "POST",
         body: payload,
-        role: "vendor",
       });
     },
     onSuccess: () => {
@@ -61,7 +59,6 @@ export default function Products() {
     mutationFn: (id: string) =>
       apiRequest(`/products/${id}`, {
         method: "DELETE",
-        role: "vendor",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vendor", "products"] });

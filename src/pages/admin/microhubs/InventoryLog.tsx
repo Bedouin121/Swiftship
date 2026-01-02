@@ -9,7 +9,7 @@ import type { ApiListResponse, InventoryLog as InventoryLogType } from "@/types/
 export default function InventoryLog() {
   const { data, isLoading } = useQuery<ApiListResponse<InventoryLogType>>({
     queryKey: ["inventory", "logs"],
-    queryFn: () => apiRequest<ApiListResponse<InventoryLogType>>("/inventory/logs", { role: "admin" }),
+    queryFn: () => apiRequest<ApiListResponse<InventoryLogType>>("/inventory/logs"),
   });
 
   const logs = data?.data ?? [];
