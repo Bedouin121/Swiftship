@@ -59,7 +59,34 @@ const Login = () => {
         return;
       }
 
-      // If vendor login fails, try admin login (simulate for now)
+      // Try driver login
+      const driverResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          userType: "driver",
+        }),
+      });
+
+      if (driverResponse.ok) {
+        const driverData = await driverResponse.json();
+        
+        // Store driver authentication data
+        localStorage.setItem("token", driverData.data.token);
+        localStorage.setItem("user", JSON.stringify(driverData.data.user));
+        localStorage.setItem("userRole", "driver");
+        localStorage.setItem("driverId", driverData.data.user.id);
+
+        // Navigate to driver dashboard
+        navigate("/driver/dashboard");
+        return;
+      }
+
+      // If vendor and driver login fail, try admin login (simulate for now)
       // In a real app, you'd have a separate admin login endpoint
       if (email === "admin@swiftshift.com" && password === "admin123") {
         localStorage.setItem("userRole", "admin");
@@ -73,8 +100,8 @@ const Login = () => {
         return;
       }
 
-      // If both fail, show error
-      throw new Error("Invalid credentials");
+      // If all fail, show error
+      throw new Error("Invalid credentials or account not approved");
       
     } catch (error) {
       console.error("Login error:", error);

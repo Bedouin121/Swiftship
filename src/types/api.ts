@@ -126,7 +126,20 @@ export interface AuthResponse {
 export interface Driver {
   _id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
   phone: string;
+  address?: string;
+  city?: string;
+  licenseNumber?: string;
+  vehicleType?: string;
+  vehicleModel?: string;
+  vehicleYear?: string;
+  vehiclePlateNumber?: string;
+  nidNumber?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
   deliveries: number;
   rating: number;
   status: string;

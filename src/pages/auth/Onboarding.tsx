@@ -195,6 +195,61 @@ const Onboarding = () => {
                 console.log("✅ Registration successful!");
                 // Success - mark registration as complete
                 setRegistrationComplete(true);
+            } else if (userType === "driver") {
+                console.log("📝 Validating driver fields...");
+                
+                // Validate driver-specific fields
+                if (!formData.nidNumber || !formData.drivingLicense || !formData.vehicleType || 
+                    !formData.vehicleNumber || !formData.emergencyContact || !formData.emergencyPhone) {
+                    throw new Error("Please fill in all required fields");
+                }
+
+                if (formData.password !== formData.confirmPassword) {
+                    throw new Error("Passwords do not match");
+                }
+
+                const apiUrl = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/auth/register/driver`;
+                console.log("🌐 Making API call to:", apiUrl);
+
+                const requestBody = {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    password: formData.password,
+                    address: formData.address,
+                    city: formData.city,
+                    nidNumber: formData.nidNumber,
+                    drivingLicense: formData.drivingLicense,
+                    vehicleType: formData.vehicleType,
+                    vehicleNumber: formData.vehicleNumber,
+                    vehicleModel: formData.vehicleType, // Using vehicleType as model for now
+                    vehicleYear: new Date().getFullYear().toString(),
+                    emergencyContact: formData.emergencyContact,
+                    emergencyPhone: formData.emergencyPhone,
+                };
+
+                // Submit driver registration
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                console.log("📡 Response received:", response.status, response.ok);
+
+                const data = await response.json();
+                console.log("📄 Response data:", data);
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Registration failed");
+                }
+
+                console.log("✅ Registration successful!");
+                // Success - mark registration as complete
+                setRegistrationComplete(true);
             } else {
                 // For other user types, simulate registration for now
                 setTimeout(() => {
