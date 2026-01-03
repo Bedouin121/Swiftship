@@ -86,16 +86,28 @@ const Login = () => {
         return;
       }
 
-      // If vendor and driver login fail, try admin login (simulate for now)
-      // In a real app, you'd have a separate admin login endpoint
-      if (email === "admin@swiftshift.com" && password === "admin123") {
+      // If vendor and driver login fail, try admin login
+      const adminResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api"}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          userType: "admin",
+        }),
+      });
+
+      if (adminResponse.ok) {
+        const adminData = await adminResponse.json();
+        
+        // Store admin authentication data
+        localStorage.setItem("token", adminData.data.token);
+        localStorage.setItem("user", JSON.stringify(adminData.data.user));
         localStorage.setItem("userRole", "admin");
-        localStorage.setItem("user", JSON.stringify({
-          id: "admin",
-          name: "Admin User",
-          email: "admin@swiftshift.com",
-          role: "admin"
-        }));
+
+        // Navigate to admin dashboard
         navigate("/");
         return;
       }

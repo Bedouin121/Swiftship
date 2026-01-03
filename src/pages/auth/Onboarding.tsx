@@ -694,28 +694,6 @@ const Onboarding = () => {
                     </div>
                 </div>
             </div>
-
-            <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                <div className="flex items-start gap-3">
-                    <Shield className="w-5 h-5 text-emerald-600 mt-0.5" />
-                    <div className="flex-1">
-                        <h4 className="font-medium text-foreground mb-1">Identity Verification</h4>
-                        <p className="text-sm text-muted-foreground mb-3">
-                            Upload clear photos of your NID (both sides) and Driving License
-                        </p>
-                        <div className="grid grid-cols-2 gap-3">
-                            <Button variant="outline" className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                <Upload className="w-4 h-4 mr-2" />
-                                Upload NID
-                            </Button>
-                            <Button variant="outline" className="border-emerald-500/30 hover:bg-emerald-500/10">
-                                <Upload className="w-4 h-4 mr-2" />
-                                Upload License
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 
@@ -802,22 +780,6 @@ const Onboarding = () => {
                                 required
                             />
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                <div className="flex items-start gap-3">
-                    <Upload className="w-5 h-5 text-emerald-600 mt-0.5" />
-                    <div>
-                        <h4 className="font-medium text-foreground mb-1">Vehicle Documents</h4>
-                        <p className="text-sm text-muted-foreground mb-3">
-                            Upload your vehicle registration and insurance documents
-                        </p>
-                        <Button variant="outline" className="border-emerald-500/30 hover:bg-emerald-500/10">
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload Documents
-                        </Button>
                     </div>
                 </div>
             </div>
