@@ -174,7 +174,7 @@ export interface Order {
   phoneNumber?: string;
   productsCount: number;
   total: number;
-  status: string;
+  status: 'Waiting' | 'Pickup' | 'Delivering' | 'Completed';
   eta: string;
   placedAt?: string;
   createdAt: string;
@@ -185,6 +185,10 @@ export interface Order {
   quantity?: number;
   deliveryType?: 'standard' | 'express';
   specifiedAddress?: string;
+  assignedDriverId?: string;
+  pickupOtp?: string;
+  deliveryOtp?: string;
+  distance?: number; // in kilometers
   deliveryLocation?: {
     coordinates: [number, number];
     address: string;

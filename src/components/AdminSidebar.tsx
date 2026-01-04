@@ -1,5 +1,6 @@
-import { LayoutDashboard, Package, Users, Truck, UserCheck, FileText, Warehouse, ClipboardList, LayoutGrid, Boxes } from "lucide-react";
+import { LayoutDashboard, Package, Users, Truck, UserCheck, FileText, Warehouse, ClipboardList, LayoutGrid, Boxes, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +39,19 @@ interface AdminSidebarProps {
 }
 
 export function AdminSidebar({ onRoleChange }: AdminSidebarProps) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear all authentication data
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("vendorId");
+    localStorage.removeItem("driverId");
+    
+    // Navigate to login page
+    navigate("/login");
+  };
   return (
     <Sidebar className="border-r-2 border-border/50 backdrop-blur-sm">
       <SidebarHeader className="border-b-2 border-border/50 p-4 bg-gradient-to-br from-primary/5 to-secondary/5">
@@ -119,6 +133,25 @@ export function AdminSidebar({ onRoleChange }: AdminSidebarProps) {
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Logout Button */}
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-gradient-to-r hover:from-red-500/10 hover:to-red-600/10 hover:text-red-600 transition-all duration-300 hover:translate-x-1 w-full text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout</span>
+                  </button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

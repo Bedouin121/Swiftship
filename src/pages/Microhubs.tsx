@@ -366,71 +366,77 @@ export default function Microhubs() {
           setSelectedLocation({ coords: null, address: "" });
         }
       }}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Add New Microhub</DialogTitle>
             <DialogDescription>
               Add a new microhub location to your logistics network
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddMicrohub}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Microhub Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="e.g., Dhanmondi Hub"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Location (Click on map to pin)</Label>
-                <BarikoiMap
-                  apiKey={BARIKOI_API_KEY}
-                  onLocationSelect={handleLocationSelect}
-                  height="250px"
-                />
-                {selectedLocation.address && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md text-sm">
-                      <MapPin className="w-4 h-4 text-primary shrink-0" />
-                      <span className="truncate">{selectedLocation.address}</span>
-                    </div>
-                    {selectedLocation.addressDetails && (
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        {selectedLocation.addressDetails.address && (
-                          <div>Address: {selectedLocation.addressDetails.address}</div>
-                        )}
-                        {selectedLocation.addressDetails.thana && (
-                          <div>Thana: {selectedLocation.addressDetails.thana}</div>
-                        )}
-                        {selectedLocation.addressDetails.district && (
-                          <div>District: {selectedLocation.addressDetails.district}</div>
-                        )}
-                      </div>
-                    )}
+          <form onSubmit={handleAddMicrohub} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Microhub Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    placeholder="e.g., Dhanmondi Hub"
+                    className="w-full"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Location (Click on map to pin)</Label>
+                  <div className="w-full overflow-hidden rounded-md border">
+                    <BarikoiMap
+                      apiKey={BARIKOI_API_KEY}
+                      onLocationSelect={handleLocationSelect}
+                      height="200px"
+                    />
                   </div>
-                )}
-                {selectedLocation.coords && (
-                  <p className="text-xs text-muted-foreground">
-                    Coordinates: {selectedLocation.coords.lat.toFixed(6)}, {selectedLocation.coords.lng.toFixed(6)}
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="capacity">Capacity (sq ft)</Label>
-                <Input
-                  id="capacity"
-                  name="capacity"
-                  type="number"
-                  placeholder="e.g., 5000"
-                  required
-                  min="0"
-                />
+                  {selectedLocation.address && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md text-sm">
+                        <MapPin className="w-4 h-4 text-primary shrink-0" />
+                        <span className="truncate">{selectedLocation.address}</span>
+                      </div>
+                      {selectedLocation.addressDetails && (
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          {selectedLocation.addressDetails.address && (
+                            <div>Address: {selectedLocation.addressDetails.address}</div>
+                          )}
+                          {selectedLocation.addressDetails.thana && (
+                            <div>Thana: {selectedLocation.addressDetails.thana}</div>
+                          )}
+                          {selectedLocation.addressDetails.district && (
+                            <div>District: {selectedLocation.addressDetails.district}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {selectedLocation.coords && (
+                    <p className="text-xs text-muted-foreground">
+                      Coordinates: {selectedLocation.coords.lat.toFixed(6)}, {selectedLocation.coords.lng.toFixed(6)}
+                    </p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="capacity">Capacity (sq ft)</Label>
+                  <Input
+                    id="capacity"
+                    name="capacity"
+                    type="number"
+                    placeholder="e.g., 5000"
+                    className="w-full"
+                    required
+                    min="0"
+                  />
+                </div>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-shrink-0 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
                 Cancel
               </Button>
@@ -449,94 +455,101 @@ export default function Microhubs() {
           setEditLocation({ coords: null, address: "" });
         }
       }}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Manage Microhub</DialogTitle>
             <DialogDescription>
               Update microhub details and status
             </DialogDescription>
           </DialogHeader>
           {selectedHub && (
-            <form onSubmit={handleUpdateMicrohub}>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-name">Microhub Name</Label>
-                  <Input
-                    id="edit-name"
-                    name="name"
-                    defaultValue={selectedHub.name}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Location</Label>
-                  <Input
-                    id="edit-location"
-                    name="location"
-                    defaultValue={selectedHub.location}
-                    placeholder="Current location (will be updated if you select new location on map)"
-                    readOnly={!!editLocation.coords}
-                    value={editLocation.coords ? editLocation.address : undefined}
-                  />
-                  <div className="text-sm text-muted-foreground mb-2">
-                    {selectedHub.latitude && selectedHub.longitude ? (
-                      <span className="text-green-600">
-                        ✓ Has coordinates ({selectedHub.latitude.toFixed(4)}, {selectedHub.longitude.toFixed(4)})
-                      </span>
-                    ) : (
-                      <span className="text-yellow-600">⚠ No coordinates saved</span>
+            <form onSubmit={handleUpdateMicrohub} className="flex flex-col flex-1 min-h-0">
+              <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-name">Microhub Name</Label>
+                    <Input
+                      id="edit-name"
+                      name="name"
+                      defaultValue={selectedHub.name}
+                      className="w-full"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Location</Label>
+                    <Input
+                      id="edit-location"
+                      name="location"
+                      defaultValue={selectedHub.location}
+                      placeholder="Current location (will be updated if you select new location on map)"
+                      className="w-full"
+                      readOnly={!!editLocation.coords}
+                      value={editLocation.coords ? editLocation.address : undefined}
+                    />
+                    <div className="text-sm text-muted-foreground mb-2">
+                      {selectedHub.latitude && selectedHub.longitude ? (
+                        <span className="text-green-600">
+                          ✓ Has coordinates ({selectedHub.latitude.toFixed(4)}, {selectedHub.longitude.toFixed(4)})
+                        </span>
+                      ) : (
+                        <span className="text-yellow-600">⚠ No coordinates saved</span>
+                      )}
+                    </div>
+                    <Label className="text-sm">Update Location (Optional - click on map to change)</Label>
+                    <div className="w-full overflow-hidden rounded-md border">
+                      <BarikoiMap
+                        apiKey={BARIKOI_API_KEY}
+                        onLocationSelect={handleEditLocationSelect}
+                        height="180px"
+                        initialCenter={
+                          selectedHub.latitude && selectedHub.longitude
+                            ? [selectedHub.longitude, selectedHub.latitude]
+                            : undefined
+                        }
+                        initialZoom={selectedHub.latitude && selectedHub.longitude ? 15 : undefined}
+                      />
+                    </div>
+                    {editLocation.address && (
+                      <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md text-sm">
+                        <MapPin className="w-4 h-4 text-green-600 shrink-0" />
+                        <span className="truncate text-green-800">New location: {editLocation.address}</span>
+                      </div>
+                    )}
+                    {editLocation.coords && (
+                      <p className="text-xs text-green-600">
+                        New coordinates: {editLocation.coords.lat.toFixed(6)}, {editLocation.coords.lng.toFixed(6)}
+                      </p>
                     )}
                   </div>
-                  <Label className="text-sm">Update Location (Optional - click on map to change)</Label>
-                  <BarikoiMap
-                    apiKey={BARIKOI_API_KEY}
-                    onLocationSelect={handleEditLocationSelect}
-                    height="200px"
-                    initialCenter={
-                      selectedHub.latitude && selectedHub.longitude
-                        ? [selectedHub.longitude, selectedHub.latitude]
-                        : undefined
-                    }
-                    initialZoom={selectedHub.latitude && selectedHub.longitude ? 15 : undefined}
-                  />
-                  {editLocation.address && (
-                    <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-md text-sm">
-                      <MapPin className="w-4 h-4 text-green-600 shrink-0" />
-                      <span className="truncate text-green-800">New location: {editLocation.address}</span>
-                    </div>
-                  )}
-                  {editLocation.coords && (
-                    <p className="text-xs text-green-600">
-                      New coordinates: {editLocation.coords.lat.toFixed(6)}, {editLocation.coords.lng.toFixed(6)}
-                    </p>
-                  )}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-capacity">Capacity (sq ft)</Label>
-                  <Input
-                    id="edit-capacity"
-                    name="capacity"
-                    type="number"
-                    defaultValue={selectedHub.capacity}
-                    required
-                    min="0"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select name="status" defaultValue={selectedHub.status}>
-                    <SelectTrigger id="edit-status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-capacity">Capacity (sq ft)</Label>
+                    <Input
+                      id="edit-capacity"
+                      name="capacity"
+                      type="number"
+                      defaultValue={selectedHub.capacity}
+                      className="w-full"
+                      required
+                      min="0"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-status">Status</Label>
+                    <Select name="status" defaultValue={selectedHub.status}>
+                      <SelectTrigger id="edit-status" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex-shrink-0 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={() => setManageDialogOpen(false)}>
                   Cancel
                 </Button>

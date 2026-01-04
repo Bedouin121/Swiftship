@@ -129,7 +129,7 @@ export default function CompletedDeliveries() {
                       <span className="font-medium text-lg">{delivery.orderId}</span>
                       <Badge className="bg-green-500">
                         <CheckCircle className="w-3 h-3 mr-1" />
-                        Delivered
+                        Completed
                       </Badge>
                       <Badge variant="outline" className="flex items-center gap-1">
                         <ShieldCheck className="w-3 h-3" />

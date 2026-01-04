@@ -20,9 +20,9 @@ export default function ActiveDeliveries() {
   });
 
   const orders = data?.data ?? [];
-  // Filter for active deliveries (not pending, not delivered)
+  // Filter for active deliveries (pickup, delivering)
   const activeDeliveries = orders.filter(
-    order => order.status !== "Pending" && order.status !== "Delivered"
+    order => order.status === "Pickup" || order.status === "Delivering"
   );
 
   const handleGuideMe = (lat: number, lng: number) => {

@@ -99,37 +99,57 @@ const AppRoutes = () => {
   // Check if current route is a vendor/driver route that requires specific authentication
   const isVendorRoute = location.pathname.startsWith('/vendor');
   const isDriverRoute = location.pathname.startsWith('/driver');
+  const isAdminRoute = location.pathname === '/' || 
+                      location.pathname.startsWith('/microhubs') || 
+                      location.pathname.startsWith('/admin') ||
+                      location.pathname.startsWith('/vendors') ||
+                      location.pathname.startsWith('/drivers') ||
+                      location.pathname.startsWith('/fleet') ||
+                      location.pathname.startsWith('/billing');
   
-  // Only redirect to login if trying to access vendor routes without vendor auth, or driver routes without driver auth
-  // Admin (authenticated or not) can access everything
-  if (isVendorRoute && userRole && userRole !== "vendor" && userRole !== "admin") {
+  // Strict role-based access control
+  if (userRole === "driver") {
+    // Drivers can only access driver routes
+    if (!isDriverRoute && location.pathname !== "/logout") {
+      return <Navigate to="/driver/dashboard" replace />;
+    }
+  } else if (userRole === "vendor") {
+    // Vendors can only access vendor routes
+    if (!isVendorRoute && location.pathname !== "/logout") {
+      return <Navigate to="/vendor/dashboard" replace />;
+    }
+  } else if (userRole === "admin") {
+    // Admin can access everything (no restrictions)
+  } else {
+    // No role set, redirect to login
     return <Navigate to="/login" replace />;
   }
-  if (isDriverRoute && userRole && userRole !== "driver" && userRole !== "admin") {
-    return <Navigate to="/login" replace />;
-  }
   
-  // If no user role, default to admin (allows unrestricted access)
+  // Set effective role based on actual user role
   const effectiveRole = userRole || "admin";
   const effectiveCurrentRole = userRole ? currentRole : "admin";
 
   return (
     <AuthenticatedLayout currentRole={effectiveCurrentRole} setCurrentRole={setCurrentRole}>
       <Routes>
-        {/* Admin Routes - Always accessible */}
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/microhubs" element={<Microhubs />} />
-        <Route path="/admin/microhubs/stock-tracking" element={<AdminStockTracking />} />
-        <Route path="/admin/microhubs/inventory-log" element={<AdminInventoryLog />} />
-        <Route path="/admin/microhubs/storage-optimization" element={<AdminStorageOptimization />} />
-        <Route path="/admin/microhubs/resource-allocation" element={<AdminResourceAllocation />} />
-        <Route path="/vendors" element={<Vendors />} />
-        <Route path="/drivers" element={<Drivers />} />
-        <Route path="/fleet" element={<Fleet />} />
-        <Route path="/billing" element={<Billing />} />
+        {/* Admin Routes - Only accessible by admin */}
+        {effectiveRole === "admin" && (
+          <>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/microhubs" element={<Microhubs />} />
+            <Route path="/admin/microhubs/stock-tracking" element={<AdminStockTracking />} />
+            <Route path="/admin/microhubs/inventory-log" element={<AdminInventoryLog />} />
+            <Route path="/admin/microhubs/storage-optimization" element={<AdminStorageOptimization />} />
+            <Route path="/admin/microhubs/resource-allocation" element={<AdminResourceAllocation />} />
+            <Route path="/vendors" element={<Vendors />} />
+            <Route path="/drivers" element={<Drivers />} />
+            <Route path="/fleet" element={<Fleet />} />
+            <Route path="/billing" element={<Billing />} />
+          </>
+        )}
 
-        {/* Vendor Routes - Accessible by vendors and admins */}
-        {(effectiveRole === "vendor" || effectiveRole === "admin") && (
+        {/* Vendor Routes - Only accessible by vendors */}
+        {effectiveRole === "vendor" && (
           <>
             <Route path="/vendor/products" element={<Products />} />
             <Route path="/vendor/dashboard" element={<VendorDashboard />} />
@@ -140,8 +160,8 @@ const AppRoutes = () => {
           </>
         )}
 
-        {/* Driver Routes - Accessible by drivers and admins */}
-        {(effectiveRole === "driver" || effectiveRole === "admin") && (
+        {/* Driver Routes - Only accessible by drivers */}
+        {effectiveRole === "driver" && (
           <>
             <Route path="/driver/dashboard" element={<DriverDashboard />} />
             <Route path="/driver/assignments" element={<DriverAssignments />} />
