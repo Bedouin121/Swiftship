@@ -397,10 +397,10 @@ export default function Assignments() {
                               <span className="text-sm text-muted-foreground">Distance</span>
                               <span className="font-medium">{distance.toFixed(2)} km</span>
                             </div>
-                            {order.pickupOtp && order.status === "Pickup" && (
-                              <div className="flex justify-between p-2 rounded bg-yellow-50 border border-yellow-200">
-                                <span className="text-sm text-yellow-700">Pickup OTP</span>
-                                <span className="font-mono font-bold text-yellow-700">{order.pickupOtp}</span>
+                            {order.status === "Pickup" && (
+                              <div className="flex justify-between p-2 rounded bg-blue-50 border border-blue-200">
+                                <span className="text-sm text-blue-700">Status</span>
+                                <span className="font-medium text-blue-700">Ready for Pickup</span>
                               </div>
                             )}
                           </div>
