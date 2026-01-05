@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { ImagePreview } from "@/components/ui/image-preview";
 import {
   Table,
   TableBody,
@@ -138,10 +139,20 @@ export default function Drivers() {
                     <p className="text-sm">{selectedDriver.email}</p>
                   </div>
                 )}
-                {selectedDriver.nidNumber && (
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">NID Number</Label>
-                    <p className="text-sm">{selectedDriver.nidNumber}</p>
+                {(selectedDriver.nidImageUrl || selectedDriver.drivingLicenseImageUrl) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedDriver.nidImageUrl && (
+                      <ImagePreview
+                        label="NID Image (Front)"
+                        imageUrl={selectedDriver.nidImageUrl}
+                      />
+                    )}
+                    {selectedDriver.drivingLicenseImageUrl && (
+                      <ImagePreview
+                        label="Driving License Photo (Front)"
+                        imageUrl={selectedDriver.drivingLicenseImageUrl}
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -169,15 +180,15 @@ export default function Drivers() {
             )}
 
             {/* License & Vehicle Information */}
-            {(selectedDriver.licenseNumber || selectedDriver.vehicleType) && (
+            {(selectedDriver.licenseExpiry || selectedDriver.vehicleType) && (
               <div>
                 <h3 className="text-lg font-semibold mb-3">License & Vehicle Information</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    {selectedDriver.licenseNumber && (
+                    {selectedDriver.licenseExpiry && (
                       <div>
-                        <Label className="text-sm font-medium text-muted-foreground">License Number</Label>
-                        <p className="text-sm">{selectedDriver.licenseNumber}</p>
+                        <Label className="text-sm font-medium text-muted-foreground">License Expiry Date</Label>
+                        <p className="text-sm">{new Date(selectedDriver.licenseExpiry).toLocaleDateString()}</p>
                       </div>
                     )}
                     {selectedDriver.vehicleType && (
@@ -416,7 +427,7 @@ export default function Drivers() {
                     <TableHead>Phone</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Vehicle Type</TableHead>
-                    <TableHead>License Number</TableHead>
+                    <TableHead>License Expiry</TableHead>
                     <TableHead>Applied</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -433,7 +444,7 @@ export default function Drivers() {
                       <TableCell className="text-muted-foreground">{driver.phone}</TableCell>
                       <TableCell className="text-muted-foreground">{driver.email || 'N/A'}</TableCell>
                       <TableCell className="capitalize">{driver.vehicleType || 'N/A'}</TableCell>
-                      <TableCell>{driver.licenseNumber || 'N/A'}</TableCell>
+                      <TableCell>{driver.licenseExpiry ? new Date(driver.licenseExpiry).toLocaleDateString() : 'N/A'}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(driver.createdAt).toLocaleDateString()}
                       </TableCell>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { ImagePreview } from "@/components/ui/image-preview";
 import {
   Table,
   TableBody,
@@ -204,9 +205,15 @@ export default function Vendors() {
                     </div>
                   )}
                   
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Business Description</Label>
-                    <p className="text-sm">{(selectedVendor as PendingVendor).businessDescription}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ImagePreview
+                      label="NID Image (Front)"
+                      imageUrl={(selectedVendor as PendingVendor).nidImageUrl}
+                    />
+                    <ImagePreview
+                      label="Trade License"
+                      imageUrl={(selectedVendor as PendingVendor).tradeLicenseUrl}
+                    />
                   </div>
                 </div>
               </div>
