@@ -31,12 +31,14 @@ import DeliveryConfirmation from "./pages/driver/DeliveryConfirmation";
 import CompletedDeliveries from "./pages/driver/CompletedDeliveries";
 import Login from "./pages/auth/Login";
 import Onboarding from "./pages/auth/Onboarding";
+import CustomerLogin from "./pages/auth/CustomerLogin";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import NotFound from "./pages/NotFound";
 import LogoutHandler from "./components/LogoutHandler";
 
 const queryClient = new QueryClient();
 
-type Role = "admin" | "vendor" | "driver";
+type Role = "admin" | "vendor" | "driver" | "customer";
 
 // Layout component for authenticated pages with sidebar
 const AuthenticatedLayout = ({ children, currentRole, setCurrentRole }: {
@@ -85,13 +87,16 @@ const AppRoutes = () => {
   }, [userRole]);
 
   // Check if current route is an auth route (no sidebar needed)
-  const isAuthRoute = ['/login', '/onboarding'].includes(location.pathname);
+  const isAuthRoute = ['/login', '/onboarding', '/customer-login'].includes(location.pathname);
+  const isCustomerRoute = location.pathname.startsWith('/customer');
 
-  if (isAuthRoute) {
+  if (isAuthRoute || isCustomerRoute) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/customer-login" element={<CustomerLogin />} />
+        <Route path="/customer/dashboard" element={<CustomerDashboard />} />
       </Routes>
     );
   }

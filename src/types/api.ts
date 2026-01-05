@@ -60,8 +60,8 @@ export interface Vendor {
   registrationNumber: string;
   taxId: string;
   website?: string;
-  businessDescription: string;
-  nidNumber: string;
+  nidImageUrl: string;
+  tradeLicenseUrl: string;
   status: string;
   products: number;
   registeredAt?: string;
@@ -81,8 +81,8 @@ export interface PendingVendor {
   registrationNumber: string;
   taxId: string;
   website?: string;
-  businessDescription: string;
-  nidNumber: string;
+  nidImageUrl: string;
+  tradeLicenseUrl: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -132,12 +132,13 @@ export interface Driver {
   phone: string;
   address?: string;
   city?: string;
-  licenseNumber?: string;
+  licenseExpiry?: string;
   vehicleType?: string;
   vehicleModel?: string;
   vehicleYear?: string;
   vehiclePlateNumber?: string;
-  nidNumber?: string;
+  nidImageUrl?: string;
+  drivingLicenseImageUrl?: string;
   emergencyContact?: string;
   emergencyPhone?: string;
   deliveries: number;

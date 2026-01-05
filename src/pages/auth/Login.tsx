@@ -12,7 +12,8 @@ import {
   Lock, 
   ArrowRight,
   Package,
-  Zap
+  Zap,
+  User
 } from "lucide-react";
 
 const Login = () => {
@@ -315,32 +316,19 @@ const Login = () => {
             </Link>
           </div>
 
-          {/* User type quick links */}
+          {/* Customer Login Button */}
           <div className="pt-4 border-t border-border">
-            <p className="text-center text-sm text-muted-foreground mb-4">
-              Join as
-            </p>
-            <div className="flex justify-center gap-3">
-              <Link
-                to="/onboarding?type=customer"
-                className="px-4 py-2 rounded-full bg-muted hover:bg-muted/80 text-sm font-medium text-foreground transition-all hover:scale-105"
-              >
-                Customer
-              </Link>
-              <Link
-                to="/onboarding?type=vendor"
-                className="px-4 py-2 rounded-full bg-muted hover:bg-muted/80 text-sm font-medium text-foreground transition-all hover:scale-105"
-              >
-                Vendor
-              </Link>
-              <Link
-                to="/onboarding?type=driver"
-                className="px-4 py-2 rounded-full bg-muted hover:bg-muted/80 text-sm font-medium text-foreground transition-all hover:scale-105"
-              >
-                Driver
-              </Link>
-            </div>
+            <Link
+              to="/customer-login"
+              className="w-full h-14 gradient-primary text-white font-semibold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group rounded-xl flex items-center justify-center gap-3"
+            >
+              <User className="w-6 h-6" />
+              Login as Customer
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
+
+
         </div>
       </div>
 

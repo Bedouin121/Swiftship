@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
     Truck,
     Eye,
@@ -56,10 +57,12 @@ interface FormData {
     registrationNumber: string;
     taxId: string;
     website: string;
-    businessDescription: string;
+    nidImageUrl: string;
+    tradeLicenseUrl: string;
 
     // Driver specific
-    nidNumber: string;
+    nidImageUrl: string;
+    drivingLicenseImageUrl: string;
     dateOfBirth: string;
     drivingLicense: string;
     licenseExpiry: string;
@@ -83,8 +86,9 @@ const initialFormData: FormData = {
     registrationNumber: "",
     taxId: "",
     website: "",
-    businessDescription: "",
-    nidNumber: "",
+    nidImageUrl: "",
+    tradeLicenseUrl: "",
+    drivingLicenseImageUrl: "",
     dateOfBirth: "",
     drivingLicense: "",
     licenseExpiry: "",
@@ -142,12 +146,8 @@ const Onboarding = () => {
                 
                 // Validate vendor-specific fields
                 if (!formData.companyName || !formData.businessType || !formData.registrationNumber || 
-                    !formData.taxId || !formData.businessDescription || !formData.nidNumber) {
-                    throw new Error("Please fill in all required fields");
-                }
-
-                if (formData.nidNumber.length !== 10) {
-                    throw new Error("NID Number must be exactly 10 digits");
+                    !formData.taxId || !formData.nidImageUrl || !formData.tradeLicenseUrl) {
+                    throw new Error("Please fill in all required fields including NID image and Trade License");
                 }
 
                 if (formData.password !== formData.confirmPassword) {
@@ -170,8 +170,8 @@ const Onboarding = () => {
                     registrationNumber: formData.registrationNumber,
                     taxId: formData.taxId,
                     website: formData.website || undefined,
-                    businessDescription: formData.businessDescription,
-                    nidNumber: formData.nidNumber,
+                    nidImageUrl: formData.nidImageUrl,
+                    tradeLicenseUrl: formData.tradeLicenseUrl,
                 };
 
                 // Submit vendor registration
@@ -199,9 +199,9 @@ const Onboarding = () => {
                 console.log("📝 Validating driver fields...");
                 
                 // Validate driver-specific fields
-                if (!formData.nidNumber || !formData.drivingLicense || !formData.vehicleType || 
-                    !formData.vehicleNumber || !formData.emergencyContact || !formData.emergencyPhone) {
-                    throw new Error("Please fill in all required fields");
+                if (!formData.nidImageUrl || !formData.drivingLicenseImageUrl || !formData.licenseExpiry || 
+                    !formData.vehicleType || !formData.vehicleNumber || !formData.emergencyContact || !formData.emergencyPhone) {
+                    throw new Error("Please fill in all required fields including NID image and Driving License image");
                 }
 
                 if (formData.password !== formData.confirmPassword) {
@@ -219,8 +219,9 @@ const Onboarding = () => {
                     password: formData.password,
                     address: formData.address,
                     city: formData.city,
-                    nidNumber: formData.nidNumber,
-                    drivingLicense: formData.drivingLicense,
+                    nidImageUrl: formData.nidImageUrl,
+                    drivingLicenseImageUrl: formData.drivingLicenseImageUrl,
+                    licenseExpiry: formData.licenseExpiry,
                     vehicleType: formData.vehicleType,
                     vehicleNumber: formData.vehicleNumber,
                     vehicleModel: formData.vehicleType, // Using vehicleType as model for now
@@ -305,7 +306,7 @@ const Onboarding = () => {
             </div>
 
             <div className="grid gap-4">
-                {(Object.keys(userTypeConfig) as UserType[]).map((type) => {
+                {(Object.keys(userTypeConfig) as UserType[]).filter(type => type !== "customer").map((type) => {
                     const config = userTypeConfig[type];
                     const Icon = config.icon;
                     return (
@@ -583,43 +584,19 @@ const Onboarding = () => {
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="businessDescription" className="text-foreground font-medium">Business Description</Label>
-                <div className="relative">
-                    <Briefcase className="absolute left-4 top-3 w-5 h-5 text-muted-foreground" />
-                    <Textarea
-                        id="businessDescription"
-                        placeholder="Describe your business, products, and services..."
-                        value={formData.businessDescription}
-                        onChange={(e) => updateForm("businessDescription", e.target.value)}
-                        className="pl-12 min-h-[120px] bg-muted/50 border-border focus:border-primary transition-all resize-none"
-                        required
-                    />
-                </div>
-            </div>
+            <ImageUpload
+                label="Upload your NID Image (Front)"
+                value={formData.nidImageUrl}
+                onChange={(url) => updateForm("nidImageUrl", url)}
+                className="mb-4"
+            />
 
-            <div className="space-y-2">
-                <Label htmlFor="vendorNidNumber" className="text-foreground font-medium">NID Number</Label>
-                <div className="relative">
-                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                        id="vendorNidNumber"
-                        placeholder="1234567890"
-                        value={formData.nidNumber}
-                        onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                            updateForm("nidNumber", value);
-                        }}
-                        className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
-                        maxLength={10}
-                        pattern="[0-9]{10}"
-                        required
-                    />
-                </div>
-                {formData.nidNumber && formData.nidNumber.length !== 10 && (
-                    <p className="text-sm text-red-500">NID Number must be exactly 10 digits</p>
-                )}
-            </div>
+            <ImageUpload
+                label="Upload your Trade License"
+                value={formData.tradeLicenseUrl}
+                onChange={(url) => updateForm("tradeLicenseUrl", url)}
+                className="mb-4"
+            />
         </div>
     );
 
@@ -631,67 +608,32 @@ const Onboarding = () => {
                 <p className="text-muted-foreground">We need to verify your identity for security</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="nidNumber" className="text-foreground font-medium">NID Number</Label>
-                    <div className="relative">
-                        <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                            id="nidNumber"
-                            placeholder="XXXXXXXXXX"
-                            value={formData.nidNumber}
-                            onChange={(e) => updateForm("nidNumber", e.target.value)}
-                            className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
-                            required
-                        />
-                    </div>
-                </div>
+            <ImageUpload
+                label="Upload your NID (Front)"
+                value={formData.nidImageUrl}
+                onChange={(url) => updateForm("nidImageUrl", url)}
+                className="mb-4"
+            />
 
-                <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth" className="text-foreground font-medium">Date of Birth</Label>
-                    <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                            id="dateOfBirth"
-                            type="date"
-                            value={formData.dateOfBirth}
-                            onChange={(e) => updateForm("dateOfBirth", e.target.value)}
-                            className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
-                            required
-                        />
-                    </div>
-                </div>
-            </div>
+            <ImageUpload
+                label="Upload your Driving License Photo (Front)"
+                value={formData.drivingLicenseImageUrl}
+                onChange={(url) => updateForm("drivingLicenseImageUrl", url)}
+                className="mb-4"
+            />
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="drivingLicense" className="text-foreground font-medium">Driving License No.</Label>
-                    <div className="relative">
-                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                            id="drivingLicense"
-                            placeholder="DL-XXXXXXX"
-                            value={formData.drivingLicense}
-                            onChange={(e) => updateForm("drivingLicense", e.target.value)}
-                            className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="licenseExpiry" className="text-foreground font-medium">License Expiry Date</Label>
-                    <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <Input
-                            id="licenseExpiry"
-                            type="date"
-                            value={formData.licenseExpiry}
-                            onChange={(e) => updateForm("licenseExpiry", e.target.value)}
-                            className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
-                            required
-                        />
-                    </div>
+            <div className="space-y-2">
+                <Label htmlFor="licenseExpiry" className="text-foreground font-medium">Driving License Expiry Date</Label>
+                <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                        id="licenseExpiry"
+                        type="date"
+                        value={formData.licenseExpiry}
+                        onChange={(e) => updateForm("licenseExpiry", e.target.value)}
+                        className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
+                        required
+                    />
                 </div>
             </div>
         </div>
@@ -927,11 +869,11 @@ const Onboarding = () => {
         }
         if (userType === "customer" && step === 3) return agreeTerms;
         if (userType === "vendor") {
-            if (step === 3) return formData.companyName && formData.businessType && formData.registrationNumber && formData.taxId && formData.businessDescription && formData.nidNumber && formData.nidNumber.length === 10;
+            if (step === 3) return formData.companyName && formData.businessType && formData.registrationNumber && formData.taxId && formData.nidImageUrl && formData.tradeLicenseUrl;
             if (step === 4) return agreeTerms;
         }
         if (userType === "driver") {
-            if (step === 3) return formData.nidNumber && formData.drivingLicense;
+            if (step === 3) return formData.nidImageUrl && formData.drivingLicenseImageUrl && formData.licenseExpiry;
             if (step === 4) return formData.vehicleType && formData.vehicleNumber;
             if (step === 5) return agreeTerms;
         }

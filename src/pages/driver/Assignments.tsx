@@ -91,7 +91,7 @@ export default function Assignments() {
     onError: (error: any) => {
       toast({
         title: "Invalid Code",
-        description: error.message || "Please enter 'abc' to complete delivery",
+        description: error.message || "Please enter the correct delivery OTP",
         variant: "destructive",
       });
     }
@@ -119,7 +119,7 @@ export default function Assignments() {
     if (!otp) {
       toast({
         title: "Code Required",
-        description: "Please enter 'abc' to complete delivery",
+        description: "Please enter the delivery OTP to complete delivery",
         variant: "destructive",
       });
       return;
@@ -436,7 +436,7 @@ export default function Assignments() {
                           {order.status === "Delivering" && (
                             <div className="flex gap-2">
                               <Input
-                                placeholder="Enter 'abc' to complete"
+                                placeholder="Enter delivery OTP"
                                 value={otpInputs[order._id] || ''}
                                 onChange={(e) => updateOtpInput(order._id, e.target.value)}
                                 className="flex-1"

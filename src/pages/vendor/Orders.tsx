@@ -159,18 +159,20 @@ export default function Orders() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "Delivered": return <CheckCircle className="w-4 h-4 text-success" />;
-      case "In Transit": return <Truck className="w-4 h-4 text-primary" />;
-      case "Processing": return <Package className="w-4 h-4 text-warning" />;
+      case "Completed": return <CheckCircle className="w-4 h-4 text-success" />;
+      case "Pickup": 
+      case "Delivering": return <Truck className="w-4 h-4 text-primary" />;
+      case "Waiting": return <Package className="w-4 h-4 text-warning" />;
       default: return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "Delivered": return "default";
-      case "In Transit": return "default";
-      case "Processing": return "secondary";
+      case "Completed": return "default";
+      case "Pickup":
+      case "Delivering": return "default";
+      case "Waiting": return "secondary";
       default: return "outline";
     }
   };
@@ -199,31 +201,31 @@ export default function Orders() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Pending</CardTitle>
+            <CardTitle>Waiting</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-muted-foreground">
-              {orders.filter((o) => o.status === "Pending").length}
+              {orders.filter((o) => o.status === "Waiting").length}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>In Transit</CardTitle>
+            <CardTitle>In Progress</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-primary">
-              {orders.filter((o) => o.status === "In Transit").length}
+              {orders.filter((o) => o.status === "Pickup" || o.status === "Delivering").length}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Delivered</CardTitle>
+            <CardTitle>Completed</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-success">
-              {orders.filter((o) => o.status === "Delivered").length}
+              {orders.filter((o) => o.status === "Completed").length}
             </p>
           </CardContent>
         </Card>
@@ -248,6 +250,7 @@ export default function Orders() {
                   <TableHead>Date</TableHead>
                   <TableHead>ETA</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Pickup OTP</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -267,6 +270,17 @@ export default function Orders() {
                           {order.status}
                         </div>
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {(order as any).pickupOtp ? (
+                        <div className="bg-blue-50 border border-blue-200 rounded px-2 py-1 text-center">
+                          <span className="font-mono font-bold text-blue-800">
+                            {(order as any).pickupOtp}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
