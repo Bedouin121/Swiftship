@@ -143,7 +143,7 @@ const CustomerLogin = () => {
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="8801713092195 or +8801713092195"
+                  placeholder="Enter your phone number here"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="pl-12 h-12 bg-muted/50 border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300"
