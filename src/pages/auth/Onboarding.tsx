@@ -15,6 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
     Truck,
     Eye,
@@ -401,18 +402,21 @@ const Onboarding = () => {
 
             <div className="space-y-2">
                 <Label htmlFor="phone" className="text-foreground font-medium">Phone Number</Label>
-                <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+880 1XXX-XXXXXX"
-                        value={formData.phone}
-                        onChange={(e) => updateForm("phone", e.target.value)}
-                        className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
-                        required
-                    />
-                </div>
+                <PhoneInput
+                    id="phone"
+                    value={formData.phone.replace('+880', '')} // Remove +880 prefix for display
+                    onChange={(value) => {
+                        // Add +880 prefix when storing
+                        const digits = value.replace(/\D/g, '');
+                        const fullPhone = digits ? `+880${digits}` : '';
+                        updateForm("phone", fullPhone);
+                    }}
+                    placeholder="1234 567 890"
+                    required
+                />
+                <p className="text-xs text-muted-foreground pl-1">
+                    Enter your 10-digit Bangladeshi phone number
+                </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -710,18 +714,21 @@ const Onboarding = () => {
 
                     <div className="space-y-2">
                         <Label htmlFor="emergencyPhone" className="text-foreground font-medium">Contact Phone</Label>
-                        <div className="relative">
-                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                                id="emergencyPhone"
-                                type="tel"
-                                placeholder="+880 1XXX-XXXXXX"
-                                value={formData.emergencyPhone}
-                                onChange={(e) => updateForm("emergencyPhone", e.target.value)}
-                                className="pl-12 h-12 bg-muted/50 border-border focus:border-primary transition-all"
-                                required
-                            />
-                        </div>
+                        <PhoneInput
+                            id="emergencyPhone"
+                            value={formData.emergencyPhone.replace('+880', '')} // Remove +880 prefix for display
+                            onChange={(value) => {
+                                // Add +880 prefix when storing
+                                const digits = value.replace(/\D/g, '');
+                                const fullPhone = digits ? `+880${digits}` : '';
+                                updateForm("emergencyPhone", fullPhone);
+                            }}
+                            placeholder="1234 567 890"
+                            required
+                        />
+                        <p className="text-xs text-muted-foreground pl-1">
+                            Emergency contact's phone number
+                        </p>
                     </div>
                 </div>
             </div>

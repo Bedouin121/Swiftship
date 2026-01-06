@@ -19,11 +19,27 @@ export default function StockTrackingMap({
   const markersRef = useRef<any[]>([]);
   const [selectedHub, setSelectedHub] = useState<Microhub | null>(null);
 
-  const getStatusColor = (hub: Microhub) => {
-    const utilization = (hub.utilized / hub.capacity) * 100;
-    if (utilization < 60) return "#22c55e"; // green
-    if (utilization < 85) return "#f59e0b"; // yellow
-    return "#ef4444"; // red
+  // Calculate gradient color from green (0%) to red (100%)
+  const getGradientColor = (percentage: number) => {
+    // Clamp percentage between 0 and 100
+    const p = Math.max(0, Math.min(100, percentage));
+    
+    // Define color stops: green -> yellow -> red
+    if (p <= 50) {
+      // Green to Yellow (0-50%)
+      const ratio = p / 50;
+      const r = Math.round(34 + (245 - 34) * ratio);   // 34 -> 245
+      const g = Math.round(197 + (158 - 197) * ratio); // 197 -> 158
+      const b = Math.round(94 + (11 - 94) * ratio);    // 94 -> 11
+      return `rgb(${r}, ${g}, ${b})`;
+    } else {
+      // Yellow to Red (50-100%)
+      const ratio = (p - 50) / 50;
+      const r = Math.round(245 + (239 - 245) * ratio);  // 245 -> 239
+      const g = Math.round(158 + (68 - 158) * ratio);   // 158 -> 68
+      const b = Math.round(11 + (68 - 11) * ratio);     // 11 -> 68
+      return `rgb(${r}, ${g}, ${b})`;
+    }
   };
 
   const getStatusText = (hub: Microhub) => {
@@ -35,32 +51,51 @@ export default function StockTrackingMap({
 
   const createMarkerElement = (hub: Microhub) => {
     const utilization = Math.round((hub.utilized / hub.capacity) * 100);
-    const color = getStatusColor(hub);
+    const color = getGradientColor(utilization);
     
     const el = document.createElement('div');
     el.className = 'stock-marker';
     el.style.cssText = `
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background-color: ${color};
-      border: 3px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      width: 40px;
+      height: 50px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
-      color: white;
-      transition: all 0.2s ease;
       position: relative;
+      transition: all 0.2s ease;
     `;
-    el.textContent = `${utilization}%`;
+    
+    // Create SVG marker pin
+    el.innerHTML = `
+      <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadow-${hub._id}" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+          </filter>
+        </defs>
+        <!-- Pin shape -->
+        <path 
+          d="M 20 0 C 11.716 0 5 6.716 5 15 C 5 23.284 20 45 20 45 C 20 45 35 23.284 35 15 C 35 6.716 28.284 0 20 0 Z" 
+          fill="${color}" 
+          stroke="white" 
+          stroke-width="2"
+          filter="url(#shadow-${hub._id})"
+        />
+        <!-- Inner circle for percentage text -->
+        <circle cx="20" cy="15" r="10" fill="white" fill-opacity="0.9"/>
+        <!-- Percentage text -->
+        <text 
+          x="20" 
+          y="19" 
+          text-anchor="middle" 
+          font-size="9" 
+          font-weight="bold" 
+          fill="${color}"
+        >${utilization}%</text>
+      </svg>
+    `;
     
     // Add hover effect
     el.addEventListener('mouseenter', () => {
-      el.style.transform = 'scale(1.1)';
+      el.style.transform = 'scale(1.15)';
       el.style.zIndex = '1000';
     });
     
@@ -242,15 +277,21 @@ export default function StockTrackingMap({
         <div className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm p-3 rounded-lg text-xs space-y-2 shadow-lg">
           <div className="font-semibold">Stock Levels</div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            <svg width="12" height="15" viewBox="0 0 40 50">
+              <path d="M 20 0 C 11.716 0 5 6.716 5 15 C 5 23.284 20 45 20 45 C 20 45 35 23.284 35 15 C 35 6.716 28.284 0 20 0 Z" fill="#22c55e" stroke="white" stroke-width="2"/>
+            </svg>
             <span>&lt;60% (In Stock)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+            <svg width="12" height="15" viewBox="0 0 40 50">
+              <path d="M 20 0 C 11.716 0 5 6.716 5 15 C 5 23.284 20 45 20 45 C 20 45 35 23.284 35 15 C 35 6.716 28.284 0 20 0 Z" fill="#f59e0b" stroke="white" stroke-width="2"/>
+            </svg>
             <span>60-85% (Low Stock)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <svg width="12" height="15" viewBox="0 0 40 50">
+              <path d="M 20 0 C 11.716 0 5 6.716 5 15 C 5 23.284 20 45 20 45 C 20 45 35 23.284 35 15 C 35 6.716 28.284 0 20 0 Z" fill="#ef4444" stroke="white" stroke-width="2"/>
+            </svg>
             <span>&gt;85% (Critical)</span>
           </div>
           <div className="text-xs text-muted-foreground mt-2 pt-2 border-t">
@@ -301,7 +342,7 @@ export default function StockTrackingMap({
                       className="h-full transition-all duration-300"
                       style={{ 
                         width: `${Math.round((selectedHub.utilized / selectedHub.capacity) * 100)}%`,
-                        backgroundColor: getStatusColor(selectedHub)
+                        backgroundColor: getGradientColor(Math.round((selectedHub.utilized / selectedHub.capacity) * 100))
                       }}
                     />
                   </div>
